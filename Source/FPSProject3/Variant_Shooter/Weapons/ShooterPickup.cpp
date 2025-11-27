@@ -72,10 +72,12 @@ void AShooterPickup::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AShooterPickup::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("拾取物触发：Pickable OnOverlap"));
+	UE_LOG(LogTemp, Log, TEXT("拾取物触发2：Pickable OnOverlap"));
 	// have we collided against a weapon holder?
 	if (IShooterWeaponHolder* WeaponHolder = Cast<IShooterWeaponHolder>(OtherActor))
 	{
+		UE_LOG(LogTemp, Log, TEXT("拾取物目标有WeaponHolder"));
+
 		WeaponHolder->AddWeaponClass(WeaponClass);
 
 		// hide this mesh
@@ -89,6 +91,10 @@ void AShooterPickup::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 		// schedule the respawn
 		GetWorld()->GetTimerManager().SetTimer(RespawnTimer, this, &AShooterPickup::RespawnPickup, RespawnTime, false);
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Log, TEXT("拾取物目标无WeaponHolder"));
 	}
 }
 
