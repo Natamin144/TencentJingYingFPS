@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 
 #include "ShooterPickup.h"
@@ -12,6 +12,7 @@
 
 AShooterPickup::AShooterPickup()
 {
+	UE_LOG(LogTemp, Log, TEXT("拾取物触发：构造函数"));
  	PrimaryActorTick.bCanEverTick = true;
 
 	// create the root
@@ -52,6 +53,7 @@ void AShooterPickup::OnConstruction(const FTransform& Transform)
 void AShooterPickup::BeginPlay()
 {
 	Super::BeginPlay();
+	UE_LOG(LogTemp, Log, TEXT("拾取物触发：Beginplay"));
 
 	if (FWeaponTableRow* WeaponData = WeaponType.GetRow<FWeaponTableRow>(FString()))
 	{
@@ -70,6 +72,7 @@ void AShooterPickup::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AShooterPickup::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Log, TEXT("拾取物触发：Pickable OnOverlap"));
 	// have we collided against a weapon holder?
 	if (IShooterWeaponHolder* WeaponHolder = Cast<IShooterWeaponHolder>(OtherActor))
 	{
