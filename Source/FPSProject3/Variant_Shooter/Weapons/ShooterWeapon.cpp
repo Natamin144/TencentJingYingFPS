@@ -170,8 +170,10 @@ void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 	SpawnParams.TransformScaleMethod = ESpawnActorScaleMethod::OverrideRootScale;
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.Instigator = PawnOwner;
+	//SpawnParams.Name = "Bullets/bullet";
 
 	AShooterProjectile* Projectile = GetWorld()->SpawnActor<AShooterProjectile>(ProjectileClass, ProjectileTransform, SpawnParams);
+	Projectile->SetFolderPath("Bullets");
 
 	// play the firing montage
 	WeaponOwner->PlayFiringMontage(FiringMontage);
