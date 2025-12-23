@@ -20,6 +20,9 @@ AShooterCharacter::AShooterCharacter()
 
 	// configure movement
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 600.0f, 0.0f);
+
+	UE_LOG(LogTemp, Log, TEXT("Set ShooterCharacter BReplicates!"));
+	bReplicates = true; 
 }
 
 void AShooterCharacter::BeginPlay()

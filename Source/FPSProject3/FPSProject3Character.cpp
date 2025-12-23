@@ -20,6 +20,7 @@ AFPSProject3Character::AFPSProject3Character()
 
 	FirstPersonMesh->SetupAttachment(GetMesh());
 	FirstPersonMesh->SetOnlyOwnerSee(true);
+	FirstPersonMesh->SetOwnerNoSee(false);
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
 
@@ -34,7 +35,8 @@ AFPSProject3Character::AFPSProject3Character()
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
 
 	// configure the character comps
-	GetMesh()->SetOwnerNoSee(true);
+	GetMesh()->SetOwnerNoSee(false);
+	GetMesh()->SetOnlyOwnerSee(false);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
 
 	GetCapsuleComponent()->SetCapsuleSize(34.0f, 96.0f);
@@ -42,6 +44,9 @@ AFPSProject3Character::AFPSProject3Character()
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+
+	UE_LOG(LogTemp, Log, TEXT("Set Character BReplicates!"));
+	bReplicates = true;
 }
 
 void AFPSProject3Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

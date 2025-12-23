@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "FPSProject3Character.h"
 #include "ShooterWeaponHolder.h"
+#include "GameFramework\Character.h"
 #include "ShooterCharacter.generated.h"
 
 class AShooterWeapon;
@@ -30,7 +31,6 @@ class FPSPROJECT3_API AShooterCharacter : public AFPSProject3Character, public I
 	UPawnNoiseEmitterComponent* PawnNoiseEmitter;
 
 protected:
-
 	/** Fire weapon input action */
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* FireAction;
@@ -163,4 +163,5 @@ protected:
 
 	/** Called from the respawn timer to destroy this character and force the PC to respawn */
 	void OnRespawn();
+
 };
