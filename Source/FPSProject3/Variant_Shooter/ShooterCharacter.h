@@ -164,4 +164,9 @@ protected:
 	/** Called from the respawn timer to destroy this character and force the PC to respawn */
 	void OnRespawn();
 
+public:
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_RequestWeaponFire();
+	bool Server_RequestWeaponFire_Validate();
+	void Server_RequestWeaponFire_Implementation();
 };

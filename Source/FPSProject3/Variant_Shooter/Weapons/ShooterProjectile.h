@@ -80,6 +80,9 @@ public:
 	/** Constructor */
 	AShooterProjectile();
 
+	//Set Replicate
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	
 	/** Gameplay initialization */

@@ -91,6 +91,11 @@ void AShooterWeapon::DeactivateWeapon()
 
 void AShooterWeapon::StartFiring()
 {
+	if (!HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StartFiring - Client blocked (only server allowed)"));
+		return;
+	}
 	// raise the firing flag
 	bIsFiring = true;
 
@@ -161,35 +166,38 @@ void AShooterWeapon::FireCooldownExpired()
 
 void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 {
-	// get the projectile transform
-	FTransform ProjectileTransform = CalculateProjectileSpawnTransform(TargetLocation);
-	
-	// spawn the projectile
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.TransformScaleMethod = ESpawnActorScaleMethod::OverrideRootScale;
-	SpawnParams.Owner = GetOwner();
-	SpawnParams.Instigator = PawnOwner;
-	//SpawnParams.Name = "Bullets/bullet";
+	if (HasAuthority()) {
+		//Server only logic
+		UE_LOG(LogTemp, Warning, TEXT("Firing Projectile"));
+		// get the projectile transform
+		FTransform ProjectileTransform = CalculateProjectileSpawnTransform(TargetLocation);
+		// spawn the projectile
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.TransformScaleMethod = ESpawnActorScaleMethod::OverrideRootScale;
+		SpawnParams.Owner = GetOwner();
+		SpawnParams.Instigator = PawnOwner;
+		//SpawnParams.Name = "Bullets/bullet";
+		AShooterProjectile* Projectile = GetWorld()->SpawnActor<AShooterProjectile>(ProjectileClass, ProjectileTransform, SpawnParams);
+		if (Projectile)
+		{
+			Projectile->SetFolderPath("Bullets");
+			Projectile->SetReplicates(true);
+			Projectile->SetReplicateMovement(true);
+		}
+	}
+	else {
+		//Client Only logic
+	}
 
-	AShooterProjectile* Projectile = GetWorld()->SpawnActor<AShooterProjectile>(ProjectileClass, ProjectileTransform, SpawnParams);
-	Projectile->SetFolderPath("Bullets");
-
-	// play the firing montage
-	WeaponOwner->PlayFiringMontage(FiringMontage);
-
-	// add recoil
-	WeaponOwner->AddWeaponRecoil(FiringRecoil);
-
-	// consume bullets
+	WeaponOwner->PlayFiringMontage(FiringMontage);	// play the firing montage
+	WeaponOwner->AddWeaponRecoil(FiringRecoil);	// add recoil// consume bullets
 	--CurrentBullets;
-
 	// if the clip is depleted, reload it
 	if (CurrentBullets <= 0)
 	{
 		CurrentBullets = MagazineSize;
 	}
-
 	// update the weapon HUD
 	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
 }

@@ -17,6 +17,12 @@ AShooterProjectile::AShooterProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Set Replicate
+	bReplicates = true;
+	SetReplicateMovement(true);
+	bNetLoadOnClient = true;
+	SetNetUpdateFrequency(100.0f);
+
 	// create the collision component and assign it as the root
 	RootComponent = CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Collision Component"));
 
@@ -27,19 +33,22 @@ AShooterProjectile::AShooterProjectile()
 
 	// create the projectile movement component. No need to attach it because it's not a Scene Component
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Projectile Movement"));
-
+	ProjectileMovement->bAutoActivate = true;
+	ProjectileMovement->SetIsReplicated(true);
 	ProjectileMovement->InitialSpeed = 3000.0f;
 	ProjectileMovement->MaxSpeed = 3000.0f;
 	ProjectileMovement->bShouldBounce = true;
 
 	// set the default damage type
-	HitDamageType = UDamageType::StaticClass();
+	HitDamageType = UDamageType::StaticClass(); 
 }
 
 void AShooterProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	bool bIsServerAuthority = (GetLocalRole() == ROLE_Authority);
+	UE_LOG(LogActor, Log, TEXT("Bullet spawned - Real Authority: %d, Net Role: %d"),
+		bIsServerAuthority, (int)GetLocalRole());
 	// ignore the pawn that shot this projectile
 	CollisionComponent->IgnoreActorWhenMoving(GetInstigator(), true);
 }
@@ -158,6 +167,11 @@ void AShooterProjectile::ProcessHit(AActor* HitActor, UPrimitiveComponent* HitCo
 		// give some physics impulse to the object
 		HitComp->AddImpulseAtLocation(HitDirection * PhysicsForce, HitLocation);
 	}
+}
+
+void AShooterProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
 void AShooterProjectile::OnDeferredDestruction()

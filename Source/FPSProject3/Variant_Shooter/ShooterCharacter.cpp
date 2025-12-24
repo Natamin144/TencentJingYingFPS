@@ -87,11 +87,25 @@ float AShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dam
 
 void AShooterCharacter::DoStartFiring()
 {
-	// fire the current weapon
-	if (CurrentWeapon)
+	if (!IsLocallyControlled()) return;
+	if (!CurrentWeapon)
 	{
-		CurrentWeapon->StartFiring();
+		UE_LOG(LogTemp, Warning, TEXT("DoStartFiring - No current weapon!"));
+		return;
 	}
+
+	//Client
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Client DoStartFiring - Send RPC to server"));
+		Server_RequestWeaponFire();
+		// To Implement: Client Only firing effects
+		//CurrentWeapon->PlayFireFX_ClientOnly();
+		return;
+	}
+	// Server: fire the current weapon
+	UE_LOG(LogTemp, Log, TEXT("Server DoStartFiring - Direct fire weapon"));
+	CurrentWeapon->StartFiring();
 }
 
 void AShooterCharacter::DoStopFiring()
@@ -283,4 +297,22 @@ void AShooterCharacter::OnRespawn()
 {
 	// destroy the character to force the PC to respawn
 	Destroy();
+}
+
+/*void AShooterCharacter::Server_RequestWeaponFire()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Client RPC - Request weapon fire on server. Function Not Implemented."));
+}*/
+
+bool AShooterCharacter::Server_RequestWeaponFire_Validate()
+{
+	return CurrentWeapon != nullptr;
+}
+
+void AShooterCharacter::Server_RequestWeaponFire_Implementation()
+{
+	if (!HasAuthority() || !CurrentWeapon) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("Server RPC - Trigger weapon fire"));
+	CurrentWeapon->StartFiring();
 }
