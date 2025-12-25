@@ -109,4 +109,9 @@ protected:
 	/** Called from the destruction timer to destroy this projectile */
 	void OnDeferredDestruction();
 
+protected:
+	// Multicast RPC to notify all clients of a hit event
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnHitRegistered(const FHitResult& Hit);
+	virtual void Multicast_OnHitRegistered_Implementation(const FHitResult& Hit);
 };

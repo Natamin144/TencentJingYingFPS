@@ -56,8 +56,13 @@ protected:
 	float MaxHP = 500.0f;
 
 	/** Current HP remaining to this character */
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHP = 0.0f;
 
+	UFUNCTION()
+	void OnRep_CurrentHealth();
+
+	void OnHealthUpdate();
 	/** Team ID for this character*/
 	UPROPERTY(EditAnywhere, Category="Team")
 	uint8 TeamByte = 0;
@@ -169,4 +174,7 @@ public:
 	void Server_RequestWeaponFire();
 	bool Server_RequestWeaponFire_Validate();
 	void Server_RequestWeaponFire_Implementation();
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+
 };

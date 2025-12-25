@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 
 #include "ShooterCharacter.h"
@@ -12,6 +12,8 @@
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
 #include "ShooterGameMode.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -34,6 +36,7 @@ void AShooterCharacter::BeginPlay()
 
 	// update the HUD
 	OnDamaged.Broadcast(1.0f);
+	UE_LOG(LogTemp, Warning, TEXT("%s OnDamaged Broadcast in AShooterCharacter::BeginPlay"), *GetName());
 }
 
 void AShooterCharacter::EndPlay(EEndPlayReason::Type EndPlayReason)
@@ -64,6 +67,13 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 float AShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	// 仅服务端处理伤害逻辑（客户端不处理，避免数据不一致）
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client received TakeDamage - ignoring (should be handled by server)"));
+		return 0.0f;
+	}
+	float oldHP = CurrentHP;
 	// ignore if already dead
 	if (CurrentHP <= 0.0f)
 	{
@@ -72,6 +82,8 @@ float AShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dam
 
 	// Reduce HP
 	CurrentHP -= Damage;
+	UE_LOG(LogTemp, Log, TEXT("%s TakeDamage: Damage=%f, OldHP=%f, NewHP=%f"),
+		*GetName(), Damage, oldHP, CurrentHP);
 
 	// Have we depleted HP?
 	if (CurrentHP <= 0.0f)
@@ -81,6 +93,7 @@ float AShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dam
 
 	// update the HUD
 	OnDamaged.Broadcast(FMath::Max(0.0f, CurrentHP / MaxHP));
+	UE_LOG(LogTemp, Warning, TEXT("%s OnDamaged Broadcast in AShooterCharacter::TakeDamage"), *GetName());
 
 	return Damage;
 }
@@ -90,7 +103,6 @@ void AShooterCharacter::DoStartFiring()
 	if (!IsLocallyControlled()) return;
 	if (!CurrentWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("DoStartFiring - No current weapon!"));
 		return;
 	}
 
@@ -315,4 +327,47 @@ void AShooterCharacter::Server_RequestWeaponFire_Implementation()
 
 	UE_LOG(LogTemp, Warning, TEXT("Server RPC - Trigger weapon fire"));
 	CurrentWeapon->StartFiring();
+}
+
+void AShooterCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AShooterCharacter, CurrentHP);
+}
+
+void AShooterCharacter::OnRep_CurrentHealth()
+{
+	OnHealthUpdate();
+}
+
+void AShooterCharacter::OnHealthUpdate()
+{
+	UE_LOG(LogTemp, Log, TEXT("%s OnRep_CurrentHealth: NewHP=%f"), *GetName(), CurrentHP);
+	OnDamaged.Broadcast(FMath::Max(0.0f, CurrentHP / MaxHP));
+	UE_LOG(LogTemp, Warning, TEXT("%s OnDamaged Broadcast in AShooterCharacter::OnHealthUpdate"), *GetName());
+	//Client
+	if (IsLocallyControlled())
+	{
+		/*FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHP);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+
+		if (CurrentHP <= 0)
+		{
+			FString deathMessage = FString::Printf(TEXT("You have been killed."));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+		}*/
+	}
+
+	//Server
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		/*FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHP);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);*/
+	}
+
+	//在所有机器上都执行的函数。
+	/*
+		因任何因伤害或死亡而产生的特殊功能都应放在这里。
+	*/
 }

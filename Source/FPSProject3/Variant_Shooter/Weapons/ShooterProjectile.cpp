@@ -63,6 +63,11 @@ void AShooterProjectile::EndPlay(EEndPlayReason::Type EndPlayReason)
 
 void AShooterProjectile::NotifyHit(class UPrimitiveComponent* MyComp, AActor* Other, class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
 {
+	//Only the server should handle hits
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		return;
+	}
 	// ignore if we've already hit something else
 	if (bHit)
 	{
@@ -91,7 +96,8 @@ void AShooterProjectile::NotifyHit(class UPrimitiveComponent* MyComp, AActor* Ot
 	}
 
 	// pass control to BP for any extra effects
-	BP_OnProjectileHit(Hit);
+	UE_LOG(LogTemp, Warning, TEXT("Call Multicast OnHitRegistered"));
+	Multicast_OnHitRegistered(Hit);
 
 	// check if we should schedule deferred destruction of the projectile
 	if (DeferredDestructionTime > 0.0f)
@@ -150,23 +156,30 @@ void AShooterProjectile::ExplosionCheck(const FVector& ExplosionCenter)
 
 void AShooterProjectile::ProcessHit(AActor* HitActor, UPrimitiveComponent* HitComp, const FVector& HitLocation, const FVector& HitDirection)
 {
+	auto owner = GetOwner();
+	bool isAuthority = (GetLocalRole() == ROLE_Authority);
 	// have we hit a character?
 	if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
 	{
 		// ignore the owner of this projectile
-		if (HitCharacter != GetOwner() || bDamageOwner)
+		if (HitCharacter != owner || bDamageOwner)
 		{
-			// apply damage to the character
-			UGameplayStatics::ApplyDamage(HitCharacter, HitDamage, GetInstigator()->GetController(), this, HitDamageType);
+			if (isAuthority) {
+				// apply damage to the character(Server Only)
+				UGameplayStatics::ApplyDamage(HitCharacter, HitDamage, GetInstigator()->GetController(), this, HitDamageType);
+			}
 		}
 	}
 
 	// have we hit a physics object?
-	if (HitComp->IsSimulatingPhysics())
-	{
-		// give some physics impulse to the object
-		HitComp->AddImpulseAtLocation(HitDirection * PhysicsForce, HitLocation);
+	if (isAuthority) {
+		if (HitComp->IsSimulatingPhysics())
+		{
+			// give some physics impulse to the object
+			HitComp->AddImpulseAtLocation(HitDirection * PhysicsForce, HitLocation);
+		}
 	}
+	
 }
 
 void AShooterProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -178,4 +191,22 @@ void AShooterProjectile::OnDeferredDestruction()
 {
 	// destroy this actor
 	Destroy();
+}
+
+void AShooterProjectile::Multicast_OnHitRegistered_Implementation(const FHitResult& Hit)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Multicast OnHitRegistered"));
+		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		BP_OnProjectileHit(Hit);
+		if (DeferredDestructionTime > 0.0f)
+		{
+			GetWorld()->GetTimerManager().SetTimer(DestructionTimer, this, &AShooterProjectile::OnDeferredDestruction, DeferredDestructionTime, false);
+		}
+		else
+		{
+			Destroy();
+		}
+	}
 }
