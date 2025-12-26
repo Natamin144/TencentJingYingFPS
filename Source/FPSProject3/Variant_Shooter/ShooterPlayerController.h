@@ -45,13 +45,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Shooter|UI")
 	TSubclassOf<UShooterBulletCounterUI> BulletCounterUIClass;
 
-	/** Tag to grant the possessed pawn to flag it as the player */
-	UPROPERTY(EditAnywhere, Category="Shooter|Player")
-	FName PlayerPawnTag = FName("Player");
 
 	/** Pointer to the bullet counter UI widget */
 	TObjectPtr<UShooterBulletCounterUI> BulletCounterUI;
 
+public:
+
+	/** Tag to grant the possessed pawn to flag it as the player */
+	UPROPERTY(EditAnywhere, Category = "Shooter|Player")
+	FName PlayerPawnTag = FName("Player");
 protected:
 
 	/** Gameplay Initialization */
@@ -63,10 +65,11 @@ protected:
 	/** Pawn initialization */
 	virtual void OnPossess(APawn* InPawn) override;
 
+
+public:
 	/** Called if the possessed pawn is destroyed */
 	UFUNCTION()
 	void OnPawnDestroyed(AActor* DestroyedActor);
-
 	/** Called when the bullet count on the possessed pawn is updated */
 	UFUNCTION()
 	void OnBulletCountUpdated(int32 MagazineSize, int32 Bullets);

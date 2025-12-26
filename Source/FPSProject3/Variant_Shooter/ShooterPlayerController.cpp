@@ -80,23 +80,6 @@ void AShooterPlayerController::SetupInputComponent()
 void AShooterPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
-	// subscribe to the pawn's OnDestroyed delegate
-	InPawn->OnDestroyed.AddDynamic(this, &AShooterPlayerController::OnPawnDestroyed);
-
-	// is this a shooter character?
-	if (AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(InPawn))
-	{
-		// add the player tag
-		ShooterCharacter->Tags.Add(PlayerPawnTag);
-
-		// subscribe to the pawn's delegates
-		ShooterCharacter->OnBulletCountUpdated.AddDynamic(this, &AShooterPlayerController::OnBulletCountUpdated);
-		ShooterCharacter->OnDamaged.AddDynamic(this, &AShooterPlayerController::OnPawnDamaged);
-
-		// force update the life bar
-		ShooterCharacter->OnDamaged.Broadcast(1.0f);
-	}
 }
 
 void AShooterPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
@@ -126,6 +109,8 @@ void AShooterPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 
 void AShooterPlayerController::OnBulletCountUpdated(int32 MagazineSize, int32 Bullets)
 {
+	if(IsLocalPlayerController())
+		UE_LOG(LogTemp, Log, TEXT("µ÷ÓÃAShooterPlayerController::OnBulletCountUpdated"));
 	// update the UI
 	if (BulletCounterUI)
 	{

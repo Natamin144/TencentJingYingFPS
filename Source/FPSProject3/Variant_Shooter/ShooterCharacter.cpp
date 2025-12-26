@@ -14,6 +14,7 @@
 #include "ShooterGameMode.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "ShooterPlayerController.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -33,6 +34,21 @@ void AShooterCharacter::BeginPlay()
 
 	// reset HP to max
 	CurrentHP = MaxHP;
+
+	// 注册一些广播事件
+	// 仅在客户端执行（本地角色）
+	if (AShooterPlayerController* PC = Cast<AShooterPlayerController>(GetController()))
+	{
+		if (PC->IsLocalPlayerController())
+		{
+			// 绑定子弹更新事件到 PlayerController 的处理函数
+			// 注意：AddDynamic 的第一个参数必须是实现回调函数的对象实例（这里是 PC）
+			OnBulletCountUpdated.AddDynamic(PC, &AShooterPlayerController::OnBulletCountUpdated);
+			OnDamaged.AddDynamic(PC, &AShooterPlayerController::OnPawnDamaged);
+			OnDestroyed.AddDynamic(PC, &AShooterPlayerController::OnPawnDestroyed);
+			Tags.Add(PC -> PlayerPawnTag);
+		}
+	}
 
 	// update the HUD
 	OnDamaged.Broadcast(1.0f);
@@ -241,6 +257,7 @@ void AShooterCharacter::AddWeaponClass(const TSubclassOf<AShooterWeapon>& Weapon
 
 void AShooterCharacter::OnWeaponActivated(AShooterWeapon* Weapon)
 {
+	UE_LOG(LogTemp, Log, TEXT("%s 激活武器: %s"), *GetName(), *Weapon->GetName());
 	// update the bullet counter
 	OnBulletCountUpdated.Broadcast(Weapon->GetMagazineSize(), Weapon->GetBulletCount());
 
