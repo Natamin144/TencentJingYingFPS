@@ -9,6 +9,7 @@
 #include "ShooterWeapon.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "ShooterCharacter.h"
 
 AShooterPickup::AShooterPickup()
 {
@@ -72,30 +73,47 @@ void AShooterPickup::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AShooterPickup::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("拾取物触发2：Pickable OnOverlap"));
-	// have we collided against a weapon holder?
-	if (IShooterWeaponHolder* WeaponHolder = Cast<IShooterWeaponHolder>(OtherActor))
+	//Server Only
+	if (GetLocalRole() != ROLE_Authority)
 	{
-		UE_LOG(LogTemp, Log, TEXT("拾取物目标有WeaponHolder"));
-
-		WeaponHolder->AddWeaponClass(WeaponClass);
-
-		// hide this mesh
-		SetActorHiddenInGame(true);
-
-		// disable collision
-		SetActorEnableCollision(false);
-
-		// disable ticking
-		SetActorTickEnabled(false);
-
-		// schedule the respawn
-		GetWorld()->GetTimerManager().SetTimer(RespawnTimer, this, &AShooterPickup::RespawnPickup, RespawnTime, false);
+		return;
 	}
-	else 
+	// 检测重叠对象是否为玩家角色
+	AShooterCharacter* PlayerCharacter = Cast<AShooterCharacter>(OtherActor);
+	if (!PlayerCharacter)
 	{
-		UE_LOG(LogTemp, Log, TEXT("拾取物目标无WeaponHolder"));
+		return; // 非玩家角色不处理
 	}
+	// 获取玩家控制器，区分服务端玩家和客户端玩家
+	APlayerController* PlayerController = PlayerCharacter->GetController<APlayerController>();
+	if (!PlayerController)
+	{
+		return;
+	}
+	if (PlayerController->IsLocalController())
+	{
+		GivePickupToHolder(PlayerCharacter);
+	}
+	else {
+		PlayerCharacter->ServerNotifyPickUpWeapon(this); // 服务端触发多播
+	}
+}
+
+void AShooterPickup::GivePickupToHolder(IShooterWeaponHolder* WeaponHolder)
+{
+	WeaponHolder -> AddWeaponClass(WeaponClass);
+
+	// hide this mesh
+	SetActorHiddenInGame(true);
+
+	// disable collision
+	SetActorEnableCollision(false);
+
+	// disable ticking
+	SetActorTickEnabled(false);
+
+	// schedule the respawn
+	GetWorld()->GetTimerManager().SetTimer(RespawnTimer, this, &AShooterPickup::RespawnPickup, RespawnTime, false);
 }
 
 void AShooterPickup::RespawnPickup()

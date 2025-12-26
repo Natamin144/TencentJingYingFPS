@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
 #include "Engine/StaticMesh.h"
+#include "ShooterWeaponHolder.h"
 #include "ShooterPickup.generated.h"
 
 class USphereComponent;
@@ -93,4 +94,7 @@ protected:
 	/** Enables this pickup after respawning */
 	UFUNCTION(BlueprintCallable, Category="Pickup")
 	void FinishRespawn();
+public:
+	/** FWD decleration*/
+	void GivePickupToHolder(IShooterWeaponHolder* WeaponHolder);
 };

@@ -6,6 +6,7 @@
 #include "FPSProject3Character.h"
 #include "ShooterWeaponHolder.h"
 #include "GameFramework\Character.h"
+#include "Weapons/ShooterPickup.h"
 #include "ShooterCharacter.generated.h"
 
 class AShooterWeapon;
@@ -176,5 +177,16 @@ public:
 	void Server_RequestWeaponFire_Implementation();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+public:
+	// 服务器 RPC：由服务端调用，用于触发多播
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerNotifyPickUpWeapon(AShooterPickup* weaponPickUp);
+	bool ServerNotifyPickUpWeapon_Validate(AShooterPickup* weaponPickUp);
+	void ServerNotifyPickUpWeapon_Implementation(AShooterPickup* weaponPickUp);
 
+	// 多播 RPC：由服务端广播到所有客户端，执行添加武器
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void MulticastPickUpWeapon(AShooterPickup* weaponPickUp);
+	bool MulticastPickUpWeapon_Validate(AShooterPickup* weaponPickUp);
+	void MulticastPickUpWeapon_Implementation(AShooterPickup* weaponPickUp);
 };

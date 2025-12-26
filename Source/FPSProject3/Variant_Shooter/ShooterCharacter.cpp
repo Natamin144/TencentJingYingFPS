@@ -371,3 +371,29 @@ void AShooterCharacter::OnHealthUpdate()
 		因任何因伤害或死亡而产生的特殊功能都应放在这里。
 	*/
 }
+
+// 服务器 RPC 实现：仅服务端执行，用于触发多播
+void AShooterCharacter::ServerNotifyPickUpWeapon_Implementation(AShooterPickup* Pickup)
+{
+	Pickup->GivePickupToHolder(this);
+	// 广播到所有客户端执行
+	MulticastPickUpWeapon(Pickup);
+}
+
+bool AShooterCharacter::ServerNotifyPickUpWeapon_Validate(AShooterPickup* Pickup)
+{
+	return Pickup != nullptr; // 简单验证：武器类不为空
+}
+
+// 多播 RPC 实现：所有客户端执行添加武器逻辑
+void AShooterCharacter::MulticastPickUpWeapon_Implementation(AShooterPickup* Pickup)
+{
+	// 客户端执行添加武器（本地角色视角同步）
+	//UE_LOG(LogTemp, Log, TEXT("MulticastPickUpWeapon - 通过网络传播，玩家获得武器: %s"), *Pickup->GetName());
+	Pickup->GivePickupToHolder(this);
+}
+
+bool AShooterCharacter::MulticastPickUpWeapon_Validate(AShooterPickup* Pickup)
+{
+	return Pickup != nullptr;
+}
