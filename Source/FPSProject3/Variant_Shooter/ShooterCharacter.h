@@ -193,4 +193,6 @@ public:
 	void MulticastPickUpWeapon(AShooterPickup* weaponPickUp);
 	bool MulticastPickUpWeapon_Validate(AShooterPickup* weaponPickUp);
 	void MulticastPickUpWeapon_Implementation(AShooterPickup* weaponPickUp);
+
+	void BindPawnBroadcast();
 };

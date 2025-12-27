@@ -103,6 +103,7 @@ void AShooterPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 		{
 			// possess the character
 			Possess(RespawnedCharacter);
+			RespawnedCharacter->BindPawnBroadcast();
 		}
 	}
 }
