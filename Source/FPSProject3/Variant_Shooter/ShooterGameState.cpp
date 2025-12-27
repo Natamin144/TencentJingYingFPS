@@ -28,7 +28,8 @@ void AShooterGameState::AddTeamScore(uint8 TeamByte)
 	++ScoreRef;
 
 	// TeamScores is a replicated property; updating it on server will replicate to clients
-	// Optionally force OnRep on server for server-side UI by calling NotifyLocalPlayerControllers() here if needed.
+	// Also update server-local UI immediately so listen-server local player sees the change.
+	NotifyLocalPlayerControllers();
 }
 
 void AShooterGameState::OnRep_TeamScores()
