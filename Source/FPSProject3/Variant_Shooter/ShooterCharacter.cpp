@@ -297,32 +297,41 @@ AShooterWeapon* AShooterCharacter::FindWeaponOfType(TSubclassOf<AShooterWeapon> 
 
 void AShooterCharacter::Die()
 {
-	// deactivate the weapon
-	if (IsValid(CurrentWeapon))
-	{
-		CurrentWeapon->DeactivateWeapon();
+	if (!HasAuthority()) {
+		UE_LOG(LogTemp, Error, TEXT("Client attempted to call Die() - ignoring (should be handled by server)"));
+		return;
 	}
-
+	Die_Local();
+	Multicast_NotifyDie();
 	// increment the team score
 	if (AShooterGameMode* GM = Cast<AShooterGameMode>(GetWorld()->GetAuthGameMode()))
 	{
 		GM->IncrementTeamScore(GetTeamByte());
 	}
-		
-	// stop character movement
-	GetCharacterMovement()->StopMovementImmediately();
-
-	// disable controls
-	DisableInput(nullptr);
-
-	// reset the bullet counter UI
-	OnBulletCountUpdated.Broadcast(0, 0);
-
-	// call the BP handler
-	BP_OnDeath();
-
 	// schedule character respawn
 	GetWorld()->GetTimerManager().SetTimer(RespawnTimer, this, &AShooterCharacter::OnRespawn, RespawnTime, false);
+}
+
+void AShooterCharacter::Die_Local()
+{
+	// deactivate the weapon
+	if (IsValid(CurrentWeapon))
+	{
+		CurrentWeapon->DeactivateWeapon();
+	}
+	// stop character movement
+	GetCharacterMovement()->StopMovementImmediately();
+	// disable controls
+	DisableInput(nullptr);
+	// reset the bullet counter UI
+	OnBulletCountUpdated.Broadcast(0, 0);
+	// call the BP handler
+	BP_OnDeath();
+}
+
+void AShooterCharacter::Multicast_NotifyDie_Implementation()
+{
+	Die_Local(); // 客户端执行本地死亡逻辑
 }
 
 void AShooterCharacter::OnRespawn()

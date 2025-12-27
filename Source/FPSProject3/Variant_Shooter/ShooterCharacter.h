@@ -162,6 +162,13 @@ protected:
 
 	/** Called when this character's HP is depleted */
 	void Die();
+	/** Handles local death effects*/
+	void Die_Local();
+
+	// 多播RPC：通知所有客户端执行死亡逻辑
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_NotifyDie();
+	virtual void Multicast_NotifyDie_Implementation();
 
 	/** Called to allow Blueprint code to react to this character's death */
 	UFUNCTION(BlueprintImplementableEvent, Category="Shooter", meta = (DisplayName = "On Death"))
