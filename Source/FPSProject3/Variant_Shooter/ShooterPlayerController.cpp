@@ -51,16 +51,21 @@ void AShooterPlayerController::BeginPlay()
 		}
 
 		// create the global shooter UI (score) for this local player controller
+		if (ShooterUIClass) {
+			ShooterUI = CreateWidget<UShooterUI>(this, ShooterUIClass);
+			if (ShooterUI)
+			{
+				ShooterUI->AddToPlayerScreen(0);
+			}
+			else
+			{
+				UE_LOG(LogFPSProject3, Error, TEXT("Could not spawn ShooterUI widget."));
+			}
+		}
+		else {
+			UE_LOG(LogFPSProject3, Error, TEXT("ShooterUIClass is not set in ShooterPlayerController."));
+		}
 		
-		ShooterUI = CreateWidget<UShooterUI>(this, ShooterUIClass);
-		if (ShooterUI)
-		{
-			ShooterUI->AddToPlayerScreen(0);
-		}
-		else
-		{
-			UE_LOG(LogFPSProject3, Error, TEXT("Could not spawn ShooterUI widget."));
-		}
 	}
 }
 
@@ -145,6 +150,27 @@ void AShooterPlayerController::OnPawnDamaged(float LifePercent)
 void AShooterPlayerController::Client_UpdateTeamScore_Implementation(uint8 TeamByte, int32 Score)
 {
 	// Ensure this runs on owning client and UI exists
+	if (!IsLocalPlayerController()) return;
+
+	// Lazy-create ShooterUI if not present
+	if (!ShooterUI && ShooterUIClass)
+	{
+		ShooterUI = CreateWidget<UShooterUI>(this, ShooterUIClass);
+		if (ShooterUI)
+		{
+			ShooterUI->AddToPlayerScreen(0);
+		}
+	}
+
+	if (ShooterUI)
+	{
+		ShooterUI->BP_UpdateScore(TeamByte, Score);
+	}
+}
+
+void AShooterPlayerController::UpdateLocalTeamScore(uint8 TeamByte, int32 Score)
+{
+	// Ensure this runs only on the owning client
 	if (!IsLocalPlayerController()) return;
 
 	// Lazy-create ShooterUI if not present

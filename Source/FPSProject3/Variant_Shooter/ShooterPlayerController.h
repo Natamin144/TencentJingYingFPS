@@ -90,4 +90,8 @@ public:
 	/** Client RPC: server notifies this controller's client to update team score UI */
 	UFUNCTION(Client, Reliable)
 	void Client_UpdateTeamScore(uint8 TeamByte, int32 Score);
+
+	/** Local helper used by GameState on clients to update the team score UI */
+	UFUNCTION()
+	void UpdateLocalTeamScore(uint8 TeamByte, int32 Score);
 };

@@ -2,25 +2,20 @@
 
 
 #include "Variant_Shooter/ShooterGameMode.h"
+#include "Variant_Shooter/ShooterGameState.h"
+#include "Variant_Shooter/ShooterPlayerController.h"
 #include "ShooterUI.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "Variant_Shooter/ShooterCharacter.h"
 #include "GameFramework/PlayerStart.h"
 #include "GameFramework/PlayerState.h"
-#include "Variant_Shooter/ShooterPlayerController.h"
 
 void AShooterGameMode::BeginPlay()
 {
 	Super::BeginPlay();
     UE_LOG(LogGameMode, Warning, TEXT("AShooterGameMode::BeginPlay - GameMode loaded, Authority: %d"), HasAuthority());
 	// UI will be created on each client's PlayerController BeginPlay.
-    if (ShooterUIClass) {
-        UE_LOG(LogTemp, Log, TEXT("ShooterUIClass exists in Shooter Game Mode."));
-    }
-    else {
-        UE_LOG(LogTemp, Error, TEXT("ShooterUIClass not exist in Shooter Game Mode."));
-    }
 }
 
 AActor* AShooterGameMode::ChoosePlayerStart(AController* PlayerController)
@@ -85,23 +80,13 @@ AActor* AShooterGameMode::ChoosePlayerStart(AController* PlayerController)
 
 void AShooterGameMode::IncrementTeamScore(uint8 TeamByte)
 {
-	// retrieve the team score if any
-	int32 Score = 0;
-	if (int32* FoundScore = TeamScores.Find(TeamByte))
+	// Delegate the score change to GameState (replicated)
+	if (AShooterGameState* GS = GetGameState<AShooterGameState>())
 	{
-		Score = *FoundScore;
+        UE_LOG(LogTemp, Log, TEXT("IncrementTeamScore called for Team %d"), TeamByte);
+		GS->AddTeamScore(TeamByte);
 	}
-
-	// increment the score for the given team
-	++Score;
-	TeamScores.Add(TeamByte, Score);
-
-	// notify all connected players (each PlayerController will update its local ShooterUI)
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		if (AShooterPlayerController* PC = Cast<AShooterPlayerController>(It->Get()))
-		{
-			PC->Client_UpdateTeamScore(TeamByte, Score);
-		}
-	}
+    else {
+		UE_LOG(LogTemp, Error, TEXT("IncrementTeamScore - Failed to get ShooterGameState"));
+    }
 }
