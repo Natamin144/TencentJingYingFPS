@@ -8,15 +8,19 @@
 #include "Variant_Shooter/ShooterCharacter.h"
 #include "GameFramework/PlayerStart.h"
 #include "GameFramework/PlayerState.h"
+#include "Variant_Shooter/ShooterPlayerController.h"
 
 void AShooterGameMode::BeginPlay()
 {
 	Super::BeginPlay();
     UE_LOG(LogGameMode, Warning, TEXT("AShooterGameMode::BeginPlay - GameMode loaded, Authority: %d"), HasAuthority());
-	//DefaultPawnClass = AShooterCharacter::StaticClass();
-	// create the UI
-	ShooterUI = CreateWidget<UShooterUI>(UGameplayStatics::GetPlayerController(GetWorld(), 0), ShooterUIClass);
-	ShooterUI -> AddToViewport(0);
+	// UI will be created on each client's PlayerController BeginPlay.
+    if (ShooterUIClass) {
+        UE_LOG(LogTemp, Log, TEXT("ShooterUIClass exists in Shooter Game Mode."));
+    }
+    else {
+        UE_LOG(LogTemp, Error, TEXT("ShooterUIClass not exist in Shooter Game Mode."));
+    }
 }
 
 AActor* AShooterGameMode::ChoosePlayerStart(AController* PlayerController)
@@ -50,7 +54,7 @@ AActor* AShooterGameMode::ChoosePlayerStart(AController* PlayerController)
         return Super::ChoosePlayerStart_Implementation(PlayerController);
     }
 
-    // Assign start by player ID
+    // Assign start to Player 1
     if (PlayerId == 0)
     {
         UE_LOG(LogGameMode, Log, TEXT("ChoosePlayerStart - Assign PlayerStartA to Player %d"), PlayerId);
@@ -62,6 +66,7 @@ AActor* AShooterGameMode::ChoosePlayerStart(AController* PlayerController)
             }
         }
     }
+    // Assign start to Player 2
     else if (PlayerId == 1)
     {
         UE_LOG(LogGameMode, Log, TEXT("ChoosePlayerStart - Assign PlayerStartB to Player %d"), PlayerId);
@@ -91,24 +96,12 @@ void AShooterGameMode::IncrementTeamScore(uint8 TeamByte)
 	++Score;
 	TeamScores.Add(TeamByte, Score);
 
-	// update the UI
-	ShooterUI->BP_UpdateScore(TeamByte, Score);
+	// notify all connected players (each PlayerController will update its local ShooterUI)
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (AShooterPlayerController* PC = Cast<AShooterPlayerController>(It->Get()))
+		{
+			PC->Client_UpdateTeamScore(TeamByte, Score);
+		}
+	}
 }
-
-/*int AShooterGameMode::RestartPlayer_Implementation(AController* NewPlayerController)
-{
-    Super::RestartPlayer(NewPlayerController);
-
-    APlayerState* PlayerState = NewPlayerController->PlayerState;
-    if (PlayerState)
-    {
-        if (PlayerState->GetPlayerId() == 0)
-        {
-            PlayerState->SetPlayerName("Player1");
-        }
-        else
-        {
-            PlayerState->SetPlayerName("Player2");
-        }
-    }
-}*/

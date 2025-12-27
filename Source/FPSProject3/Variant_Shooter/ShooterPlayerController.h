@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "UI/ShooterUI.h"
 #include "ShooterPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -49,6 +50,14 @@ protected:
 	/** Pointer to the bullet counter UI widget */
 	TObjectPtr<UShooterBulletCounterUI> BulletCounterUI;
 
+	/** Type of global shooter UI widget to spawn (score board etc.) */
+	/** Type of UI widget to spawn */
+	UPROPERTY(EditAnywhere, Category = "Shooter")
+	TSubclassOf<UShooterUI> ShooterUIClass;
+
+	/** Pointer to the global shooter UI widget */
+	TObjectPtr<UShooterUI> ShooterUI;
+
 public:
 
 	/** Tag to grant the possessed pawn to flag it as the player */
@@ -77,4 +86,8 @@ public:
 	/** Called when the possessed pawn is damaged */
 	UFUNCTION()
 	void OnPawnDamaged(float LifePercent);
+
+	/** Client RPC: server notifies this controller's client to update team score UI */
+	UFUNCTION(Client, Reliable)
+	void Client_UpdateTeamScore(uint8 TeamByte, int32 Score);
 };

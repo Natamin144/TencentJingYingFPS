@@ -11,6 +11,7 @@
 #include "ShooterBulletCounterUI.h"
 #include "FPSProject3.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+#include "UI/ShooterUI.h"
 
 void AShooterPlayerController::BeginPlay()
 {
@@ -48,7 +49,18 @@ void AShooterPlayerController::BeginPlay()
 			UE_LOG(LogFPSProject3, Error, TEXT("Could not spawn bullet counter widget."));
 
 		}
+
+		// create the global shooter UI (score) for this local player controller
 		
+		ShooterUI = CreateWidget<UShooterUI>(this, ShooterUIClass);
+		if (ShooterUI)
+		{
+			ShooterUI->AddToPlayerScreen(0);
+		}
+		else
+		{
+			UE_LOG(LogFPSProject3, Error, TEXT("Could not spawn ShooterUI widget."));
+		}
 	}
 }
 
@@ -85,7 +97,10 @@ void AShooterPlayerController::OnPossess(APawn* InPawn)
 void AShooterPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 {
 	// reset the bullet counter HUD
-	BulletCounterUI->BP_UpdateBulletCounter(0, 0);
+	if (BulletCounterUI)
+	{
+		BulletCounterUI->BP_UpdateBulletCounter(0, 0);
+	}
 
 	// find the player start
 	TArray<AActor*> ActorList;
@@ -124,5 +139,26 @@ void AShooterPlayerController::OnPawnDamaged(float LifePercent)
 	if (IsValid(BulletCounterUI))
 	{
 		BulletCounterUI->BP_Damaged(LifePercent);
+	}
+}
+
+void AShooterPlayerController::Client_UpdateTeamScore_Implementation(uint8 TeamByte, int32 Score)
+{
+	// Ensure this runs on owning client and UI exists
+	if (!IsLocalPlayerController()) return;
+
+	// Lazy-create ShooterUI if not present
+	if (!ShooterUI && ShooterUIClass)
+	{
+		ShooterUI = CreateWidget<UShooterUI>(this, ShooterUIClass);
+		if (ShooterUI)
+		{
+			ShooterUI->AddToPlayerScreen(0);
+		}
+	}
+
+	if (ShooterUI)
+	{
+		ShooterUI->BP_UpdateScore(TeamByte, Score);
 	}
 }
