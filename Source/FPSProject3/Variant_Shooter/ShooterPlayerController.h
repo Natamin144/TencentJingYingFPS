@@ -74,6 +74,8 @@ protected:
 	/** Pawn initialization */
 	virtual void OnPossess(APawn* InPawn) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 
 public:
 	/** Called if the possessed pawn is destroyed */
@@ -94,4 +96,7 @@ public:
 	/** Local helper used by GameState on clients to update the team score UI */
 	UFUNCTION()
 	void UpdateLocalTeamScore(uint8 TeamByte, int32 Score);
+	/** Team ID for this character*/
+	UPROPERTY(EditAnywhere, Replicated, Category = "Team")
+	uint8 PlayerTeamByte = 0;
 };

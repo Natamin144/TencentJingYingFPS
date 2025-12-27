@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 
 #include "Variant_Shooter/ShooterPlayerController.h"
@@ -12,6 +12,7 @@
 #include "FPSProject3.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 #include "UI/ShooterUI.h"
+#include "Net/UnrealNetwork.h"
 
 void AShooterPlayerController::BeginPlay()
 {
@@ -29,11 +30,8 @@ void AShooterPlayerController::BeginPlay()
 			{
 				// add the controls to the player screen
 				MobileControlsWidget->AddToPlayerScreen(0);
-
 			} else {
-
 				UE_LOG(LogFPSProject3, Error, TEXT("Could not spawn mobile controls widget."));
-
 			}
 		}
 
@@ -65,7 +63,14 @@ void AShooterPlayerController::BeginPlay()
 		else {
 			UE_LOG(LogFPSProject3, Error, TEXT("ShooterUIClass is not set in ShooterPlayerController."));
 		}
-		
+	}
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// 默认服务器控制的玩家（如AI）设为0，客户端玩家设为1
+		PlayerTeamByte = IsLocalController() ? 0 : 1;
+
+		UE_LOG(LogTemp, Log, TEXT("服务器为玩家设置TeamByte: %d"), PlayerTeamByte);
 	}
 }
 
@@ -131,7 +136,7 @@ void AShooterPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 void AShooterPlayerController::OnBulletCountUpdated(int32 MagazineSize, int32 Bullets)
 {
 	if(IsLocalPlayerController())
-		UE_LOG(LogTemp, Log, TEXT("����AShooterPlayerController::OnBulletCountUpdated"));
+		UE_LOG(LogTemp, Log, TEXT("调用AShooterPlayerController::OnBulletCountUpdated"));
 	// update the UI
 	if (BulletCounterUI)
 	{
@@ -187,4 +192,11 @@ void AShooterPlayerController::UpdateLocalTeamScore(uint8 TeamByte, int32 Score)
 	{
 		ShooterUI->BP_UpdateScore(TeamByte, Score);
 	}
+}
+
+void AShooterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	// 配置TeamByte从服务器复制到所有客户端
+	DOREPLIFETIME(AShooterPlayerController, PlayerTeamByte);
 }

@@ -306,7 +306,7 @@ void AShooterCharacter::Die()
 	// increment the team score
 	if (AShooterGameMode* GM = Cast<AShooterGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		GM->IncrementTeamScore(TeamByte);
+		GM->IncrementTeamScore(GetTeamByte());
 	}
 		
 	// stop character movement
@@ -434,4 +434,18 @@ void AShooterCharacter::BindPawnBroadcast()
 			Tags.Add(PC->PlayerPawnTag);
 		}
 	}
+}
+
+uint8 AShooterCharacter::GetTeamByte() const
+{
+	// Try to get team from PlayerState
+	if (AShooterPlayerController* PC = Cast<AShooterPlayerController>(GetController()))
+	{
+		return PC->PlayerTeamByte;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s GetTeamByte: No PlayerController found, defaulting to team 0"), *GetName());
+	}
+	return 0; // Default team
 }

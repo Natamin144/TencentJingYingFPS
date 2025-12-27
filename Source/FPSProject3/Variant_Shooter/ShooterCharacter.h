@@ -64,9 +64,9 @@ protected:
 	void OnRep_CurrentHealth();
 
 	void OnHealthUpdate();
-	/** Team ID for this character*/
-	UPROPERTY(EditAnywhere, Category="Team")
-	uint8 TeamByte = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "Team")
+	uint8 GetTeamByte() const;
 
 	/** List of weapons picked up by the character */
 	TArray<AShooterWeapon*> OwnedWeapons;
