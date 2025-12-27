@@ -103,7 +103,7 @@ void AShooterWeapon::StartFiring()
 	// this may be under the refire rate if the weapon shoots slow enough and the player is spamming the trigger
 	const float TimeSinceLastShot = GetWorld()->GetTimeSeconds() - TimeOfLastShot;
 
-	if (TimeSinceLastShot > RefireRate)
+	if (TimeSinceLastShot > RefireRate && CurrentBullets > 0)
 	{
 		// fire the weapon right away
 		Fire();
@@ -194,10 +194,10 @@ void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 	WeaponOwner->AddWeaponRecoil(FiringRecoil);	// add recoil// consume bullets
 	--CurrentBullets;
 	// if the clip is depleted, reload it
-	if (CurrentBullets <= 0)
+	/*if (CurrentBullets <= 0)
 	{
 		CurrentBullets = MagazineSize;
-	}
+	}*/
 	// update the weapon HUD
 	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
 }

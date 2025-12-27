@@ -54,7 +54,7 @@ protected:
 
 	/** Max HP this character can have */
 	UPROPERTY(EditAnywhere, Category="Health")
-	float MaxHP = 500.0f;
+	float MaxHP = 100.0f;
 
 	/** Current HP remaining to this character */
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
