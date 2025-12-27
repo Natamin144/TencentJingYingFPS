@@ -177,6 +177,10 @@ public:
 	void Server_RequestWeaponFire_Implementation();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	/** Client RPC: server tells owning client to update HUD (will broadcast OnBulletCountUpdated on client) */
+	UFUNCTION(Client, Reliable)
+	void Client_UpdateWeaponHUD(int32 CurrentAmmo, int32 MagazineSize);
+
 public:
 	// 服务器 RPC：由服务端调用，用于触发多播
 	UFUNCTION(Server, Reliable, WithValidation)

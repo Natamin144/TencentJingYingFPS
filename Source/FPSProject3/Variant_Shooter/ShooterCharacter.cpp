@@ -201,6 +201,22 @@ void AShooterCharacter::AddWeaponRecoil(float Recoil)
 
 void AShooterCharacter::UpdateWeaponHUD(int32 CurrentAmmo, int32 MagazineSize)
 {
+	// When called on server, the delegate broadcast won't reach the owning client (bindings exist only on client).
+	// Forward the update to the owning client when this actor is server-authoritative and not locally controlled.
+	if (GetLocalRole() == ROLE_Authority && !IsLocallyControlled())
+	{
+		// send to owning client
+		Client_UpdateWeaponHUD(CurrentAmmo, MagazineSize);
+		return;
+	}
+
+	// Local client (or listen-server local player) -> broadcast so blueprints bound to OnBulletCountUpdated run.
+	OnBulletCountUpdated.Broadcast(MagazineSize, CurrentAmmo);
+}
+
+void AShooterCharacter::Client_UpdateWeaponHUD_Implementation(int32 CurrentAmmo, int32 MagazineSize)
+{
+	// Running on owning client: broadcast to trigger Blueprint HUD update bound to the delegate.
 	OnBulletCountUpdated.Broadcast(MagazineSize, CurrentAmmo);
 }
 
