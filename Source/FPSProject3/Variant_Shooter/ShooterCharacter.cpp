@@ -315,8 +315,8 @@ void AShooterCharacter::Die()
 		}
 	}
 
-	// Destroy this pawn on the server. GameMode will spawn and possess a new pawn at respawn time.
-	Destroy();
+	// DO NOT Destroy() here so death animation / ragdoll can play on server + clients.
+	// GameMode will destroy the old pawn right before respawning a new one.
 }
 
 void AShooterCharacter::Die_Local()
@@ -448,6 +448,7 @@ void AShooterCharacter::BindPawnBroadcast()
 			OnDamaged.AddDynamic(PC, &AShooterPlayerController::OnPawnDamaged);
 			OnDestroyed.AddDynamic(PC, &AShooterPlayerController::OnPawnDestroyed);
 			Tags.Add(PC->PlayerPawnTag);
+			OnDamaged.Broadcast(1.0f);
 		}
 	}
 }

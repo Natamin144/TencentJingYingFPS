@@ -102,6 +102,15 @@ void AShooterGameMode::RespawnController(AController* Controller)
 	// Clear handle
 	RespawnTimerHandles.Remove(Controller);
 
+	// If controller still possesses a dead pawn, destroy it now (just-before-respawn)
+	if (APawn* OldPawn = Controller->GetPawn())
+	{
+		UE_LOG(LogTemp, Log, TEXT("RespawnController: Removing old pawn %s before respawn"), *OldPawn->GetName());
+		// Ensure controller is unpossessed before destroying pawn
+		Controller->UnPossess();
+		OldPawn->Destroy();
+	}
+
 	// Determine spawn transform (use ChoosePlayerStart)
 	AActor* StartSpot = ChoosePlayerStart(Controller);
 	FTransform SpawnTransform = StartSpot ? StartSpot->GetActorTransform() : FTransform::Identity;
