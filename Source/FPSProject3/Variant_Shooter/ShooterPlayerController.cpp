@@ -51,6 +51,7 @@ void AShooterPlayerController::BeginPlay()
 		// create the global shooter UI (score) for this local player controller
 		if (ShooterUIClass) {
 			ShooterUI = CreateWidget<UShooterUI>(this, ShooterUIClass);
+			ShooterUI->CustomPlayerName = CustomPlayerName;
 			if (ShooterUI)
 			{
 				ShooterUI->AddToPlayerScreen(0);
@@ -67,10 +68,18 @@ void AShooterPlayerController::BeginPlay()
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		// 默认服务器控制的玩家（如AI）设为0，客户端玩家设为1
-		PlayerTeamByte = IsLocalController() ? 1 : 0;
-
-		UE_LOG(LogTemp, Log, TEXT("服务器为玩家设置TeamByte: %d"), PlayerTeamByte);
+		if(IsLocalController())
+		{
+			PlayerTeamByte = 1;
+			CustomPlayerName = FString::Printf(TEXT("Server Player"));
+			NetworkPlayerID = 0;
+		}
+		else
+		{
+			PlayerTeamByte = 0;
+			CustomPlayerName = FString::Printf(TEXT("Client Player"));
+			NetworkPlayerID = 1;
+		}
 	}
 }
 

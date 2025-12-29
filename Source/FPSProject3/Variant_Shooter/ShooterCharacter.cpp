@@ -466,3 +466,21 @@ uint8 AShooterCharacter::GetTeamByte() const
 	}
 	return 0; // Default team
 }
+
+FString AShooterCharacter::GetCustomPlayerName()
+{
+	if (AShooterPlayerController* PC = Cast<AShooterPlayerController>(GetController()))
+	{
+		return PC->CustomPlayerName;
+	}
+	return FString("Unknown");
+}
+
+uint16 AShooterCharacter::GetPlayerNetworkID()
+{
+	if (AShooterPlayerController* PC = Cast<AShooterPlayerController>(GetController()))
+	{
+		return PC->NetworkPlayerID;
+	}
+	return 0;
+}

@@ -96,6 +96,12 @@ public:
 	/** Local helper used by GameState on clients to update the team score UI */
 	UFUNCTION()
 	void UpdateLocalTeamScore(uint8 TeamByte, int32 Score);
+
+	UPROPERTY(EditAnywhere, Replicated, Category = "Shooter|Player")
+	FString CustomPlayerName;
+	//在整个网络中的玩家ID
+	UPROPERTY(EditAnywhere, Replicated, Category = "Shooter|Player")
+	uint16 NetworkPlayerID = 0;
 	/** Team ID for this character*/
 	UPROPERTY(EditAnywhere, Replicated, Category = "Team")
 	uint8 PlayerTeamByte = 0;

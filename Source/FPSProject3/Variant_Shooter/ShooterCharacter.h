@@ -120,6 +120,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void DoSwitchWeapon();
 
+	UFUNCTION(BlueprintCallable)
+	FString GetCustomPlayerName();
+
+	uint16 GetPlayerNetworkID();
+
 public:
 
 	//~Begin IShooterWeaponHolder interface

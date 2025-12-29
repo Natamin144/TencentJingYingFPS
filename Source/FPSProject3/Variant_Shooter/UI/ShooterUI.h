@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -15,6 +15,9 @@ class FPSPROJECT3_API UShooterUI : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Shooter")
+	FString CustomPlayerName;
 
 	/** Allows Blueprint to update score sub-widgets */
 	UFUNCTION(BlueprintImplementableEvent, Category="Shooter", meta = (DisplayName = "Update Score"))
