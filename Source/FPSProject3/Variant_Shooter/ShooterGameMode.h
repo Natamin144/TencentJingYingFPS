@@ -20,15 +20,8 @@ class FPSPROJECT3_API AShooterGameMode : public AGameModeBase
 	
 protected:
 
-	/** Type of UI widget to spawn */
-	UPROPERTY(EditAnywhere, Category="Shooter")
-	TSubclassOf<UShooterUI> ShooterUIClass;
-
-	/** Pointer to the UI widget */
-	TObjectPtr<UShooterUI> ShooterUI;
-
-	/** Map of scores by team ID */
-	TMap<uint8, int32> TeamScores;
+	/** Respawn timer handles keyed by controller */
+	TMap<TWeakObjectPtr<AController>, FTimerHandle> RespawnTimerHandles;
 
 protected:
 
@@ -41,4 +34,10 @@ public:
 	void IncrementTeamScore(uint8 TeamByte);
 	AActor* ChoosePlayerStart(AController* Player);
 
+	/** Schedule a respawn for this controller after Delay seconds (server only) */
+	void ScheduleRespawn(AController* Controller, float Delay);
+
+protected:
+	/** Called by timer to actually respawn controller's pawn */
+	void RespawnController(AController* Controller);
 };

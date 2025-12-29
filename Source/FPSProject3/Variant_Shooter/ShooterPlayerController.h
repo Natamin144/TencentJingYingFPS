@@ -99,4 +99,12 @@ public:
 	/** Team ID for this character*/
 	UPROPERTY(EditAnywhere, Replicated, Category = "Team")
 	uint8 PlayerTeamByte = 0;
+
+	/** Client RPC: notify owning client that they were respawned (server calls after possess) */
+	UFUNCTION(Client, Reliable)
+	void Client_OnRespawned();
+
+	/** Getter for respawn CharacterClass (used by GameMode when respawning) */
+	UFUNCTION()
+	TSubclassOf<AShooterCharacter> GetRespawnCharacterClass() const { return CharacterClass; }
 };

@@ -47,8 +47,8 @@ void AShooterProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	bool bIsServerAuthority = (GetLocalRole() == ROLE_Authority);
-	UE_LOG(LogActor, Log, TEXT("Bullet spawned - Real Authority: %d, Net Role: %d"),
-		bIsServerAuthority, (int)GetLocalRole());
+	/*UE_LOG(LogActor, Log, TEXT("Bullet spawned - Real Authority: %d, Net Role: %d"),
+		bIsServerAuthority, (int)GetLocalRole());*/
 	// ignore the pawn that shot this projectile
 	CollisionComponent->IgnoreActorWhenMoving(GetInstigator(), true);
 }

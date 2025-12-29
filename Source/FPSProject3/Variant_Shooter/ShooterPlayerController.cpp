@@ -112,25 +112,8 @@ void AShooterPlayerController::OnPawnDestroyed(AActor* DestroyedActor)
 		BulletCounterUI->BP_UpdateBulletCounter(0, 0);
 	}
 
-	// find the player start
-	TArray<AActor*> ActorList;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), ActorList);
-
-	if (ActorList.Num() > 0)
-	{
-		// select a random player start
-		AActor* RandomPlayerStart = ActorList[FMath::RandRange(0, ActorList.Num() - 1)];
-
-		// spawn a character at the player start
-		const FTransform SpawnTransform = RandomPlayerStart->GetActorTransform();
-
-		if (AShooterCharacter* RespawnedCharacter = GetWorld()->SpawnActor<AShooterCharacter>(CharacterClass, SpawnTransform))
-		{
-			// possess the character
-			Possess(RespawnedCharacter);
-			RespawnedCharacter->BindPawnBroadcast();
-		}
-	}
+	// Respawn is now handled by GameMode. Just log and let server schedule/perform respawn.
+	UE_LOG(LogTemp, Log, TEXT("OnPawnDestroyed: pawn destroyed for controller %s - respawn will be handled by server GameMode"), *GetName());
 }
 
 void AShooterPlayerController::OnBulletCountUpdated(int32 MagazineSize, int32 Bullets)
@@ -191,6 +174,16 @@ void AShooterPlayerController::UpdateLocalTeamScore(uint8 TeamByte, int32 Score)
 	if (ShooterUI)
 	{
 		ShooterUI->BP_UpdateScore(TeamByte, Score);
+	}
+}
+
+void AShooterPlayerController::Client_OnRespawned_Implementation()
+{
+	// Client-side hook after server respawned and possessed a new pawn.
+	// Blueprints can override or bind to this event. For now just log.
+	if (IsLocalPlayerController())
+	{
+		UE_LOG(LogTemp, Log, TEXT("Client_OnRespawned: local player has been respawned by server."));
 	}
 }
 

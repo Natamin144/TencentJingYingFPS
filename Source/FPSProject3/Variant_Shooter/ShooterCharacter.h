@@ -77,8 +77,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category ="Destruction", meta = (ClampMin = 0, ClampMax = 10, Units = "s"))
 	float RespawnTime = 5.0f;
 
-	FTimerHandle RespawnTimer;
-
 public:
 
 	/** Bullet count updated delegate */

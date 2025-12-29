@@ -45,9 +45,6 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-
-	// clear the respawn timer
-	GetWorld()->GetTimerManager().ClearTimer(RespawnTimer);
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -301,15 +298,25 @@ void AShooterCharacter::Die()
 		UE_LOG(LogTemp, Error, TEXT("Client attempted to call Die() - ignoring (should be handled by server)"));
 		return;
 	}
+
+	// local and client effects
 	Die_Local();
 	Multicast_NotifyDie();
+
 	// increment the team score
 	if (AShooterGameMode* GM = Cast<AShooterGameMode>(GetWorld()->GetAuthGameMode()))
 	{
 		GM->IncrementTeamScore(GetTeamByte());
+
+		// Schedule respawn via GameMode (GameMode will spawn and possess)
+		if (AController* PC = GetController())
+		{
+			GM->ScheduleRespawn(PC, RespawnTime);
+		}
 	}
-	// schedule character respawn
-	GetWorld()->GetTimerManager().SetTimer(RespawnTimer, this, &AShooterCharacter::OnRespawn, RespawnTime, false);
+
+	// Destroy this pawn on the server. GameMode will spawn and possess a new pawn at respawn time.
+	Destroy();
 }
 
 void AShooterCharacter::Die_Local()
@@ -336,8 +343,8 @@ void AShooterCharacter::Multicast_NotifyDie_Implementation()
 
 void AShooterCharacter::OnRespawn()
 {
-	// destroy the character to force the PC to respawn
-	Destroy();
+	// kept for compatibility, no-op (respawn managed by GameMode)
+	UE_LOG(LogTemp, Verbose, TEXT("AShooterCharacter::OnRespawn called - respawn handled by GameMode"));
 }
 
 /*void AShooterCharacter::Server_RequestWeaponFire()
@@ -401,7 +408,7 @@ void AShooterCharacter::OnHealthUpdate()
 	*/
 }
 
-// 服务器 RPC 实现：仅服务端执行，用于触发多播
+// 服务器 RPC 实现：仅服务端执行
 void AShooterCharacter::ServerNotifyPickUpWeapon_Implementation(AShooterPickup* Pickup)
 {
 	Pickup->GivePickupToHolder(this);
