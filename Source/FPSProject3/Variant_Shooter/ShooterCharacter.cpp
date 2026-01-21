@@ -16,6 +16,7 @@
 #include "Engine/Engine.h"
 #include "ShooterPlayerController.h"
 #include "Weapons/ShooterProjectile.h" // added to inspect DamageCauser when it's a projectile
+#include "Variant_Shooter/ShooterGameState.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -339,10 +340,19 @@ void AShooterCharacter::Die(AActor* DamageCauser)
 			UE_LOG(LogTemp, Log, TEXT("Die: No killer character identified; no team awarded"));
 		}
 
+		bool isGameOver = false;
+		if (AShooterGameState* GS = Cast<AShooterGameState>(GetWorld()->GetGameState())) 
+		{
+			isGameOver = GS->GetIsGameOverNotified();
+		}
+
 		// Schedule respawn via GameMode (GameMode will spawn and possess)
 		if (AController* PC = GetController())
 		{
-			GM->ScheduleRespawn(PC, RespawnTime);
+			if (!isGameOver) {
+				GM->ScheduleRespawn(PC, RespawnTime);
+			}
+			
 		}
 	}
 

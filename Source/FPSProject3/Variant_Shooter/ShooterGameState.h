@@ -40,7 +40,12 @@ protected:
 	/** Called when a team reaches WinningScore; notifies PC UIs and server GameMode */
 	void NotifyGameOver(uint8 WinningTeam);
 
+	bool IsGameOverNotified = false;
+
 public:
 	// replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool GetIsGameOverNotified() const { return IsGameOverNotified; }
 };

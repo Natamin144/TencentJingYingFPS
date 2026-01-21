@@ -66,6 +66,7 @@ void AShooterGameState::NotifyLocalPlayerControllers()
 void AShooterGameState::NotifyGameOver(uint8 WinningTeam)
 {
 	UE_LOG(LogTemp, Log, TEXT("Game Over! Winning Team: %d"), WinningTeam);
+	IsGameOverNotified = true;
 	// Runs on server only: notify all PlayerControllers via client RPC (clients will run UI logic).
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
