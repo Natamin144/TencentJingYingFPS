@@ -255,6 +255,9 @@ void AShooterCharacter::AddWeaponClass(const TSubclassOf<AShooterWeapon>& Weapon
 			CurrentWeapon->ActivateWeapon();
 		}
 	}
+	else {
+		OwnedWeapon->Reload();
+	}
 }
 
 void AShooterCharacter::OnWeaponActivated(AShooterWeapon* Weapon)

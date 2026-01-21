@@ -201,6 +201,14 @@ void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
 }
 
+void AShooterWeapon::Reload()
+{
+	// refill the magazine
+	CurrentBullets = MagazineSize;
+	// update the weapon HUD
+	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
+}
+
 FTransform AShooterWeapon::CalculateProjectileSpawnTransform(const FVector& TargetLocation) const
 {
 	// find the muzzle location
