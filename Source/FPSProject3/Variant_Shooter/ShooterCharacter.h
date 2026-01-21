@@ -182,9 +182,9 @@ protected:
 
 public:
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_RequestWeaponFire();
-	bool Server_RequestWeaponFire_Validate();
-	void Server_RequestWeaponFire_Implementation();
+	void Server_RequestWeaponFire(bool StopFire);
+	bool Server_RequestWeaponFire_Validate(bool StopFire);
+	void Server_RequestWeaponFire_Implementation(bool StopFire);
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Client RPC: server tells owning client to update HUD (will broadcast OnBulletCountUpdated on client) */

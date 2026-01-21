@@ -113,7 +113,7 @@ void AShooterCharacter::DoStartFiring()
 	if (GetLocalRole() != ROLE_Authority)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Client DoStartFiring - Send RPC to server"));
-		Server_RequestWeaponFire();
+		Server_RequestWeaponFire(false);
 		// To Implement: Client Only firing effects
 		//CurrentWeapon->PlayFireFX_ClientOnly();
 		return;
@@ -125,11 +125,22 @@ void AShooterCharacter::DoStartFiring()
 
 void AShooterCharacter::DoStopFiring()
 {
-	// stop firing the current weapon
-	if (CurrentWeapon)
+	if (!IsLocallyControlled()) return;
+	if (!CurrentWeapon)
 	{
-		CurrentWeapon->StopFiring();
+		return;
 	}
+
+	//Client
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Client StopFiring - Send RPC to server"));
+		Server_RequestWeaponFire(true);
+		// To Implement: Client Only firing effects
+		//CurrentWeapon->PlayFireFX_ClientOnly();
+		return;
+	}
+	CurrentWeapon->StopFiring();
 }
 
 void AShooterCharacter::DoSwitchWeapon()
@@ -356,8 +367,11 @@ void AShooterCharacter::Die(AActor* DamageCauser)
 		if (Killer)
 		{
 			const uint8 KillerTeam = Killer->GetTeamByte();
-			UE_LOG(LogTemp, Log, TEXT("Die: awarding point to team %d (killer %s)"), KillerTeam, *Killer->GetName());
-			GM->IncrementTeamScore(KillerTeam);
+			const uint8 VictimTeam = GetTeamByte();
+			if (KillerTeam != VictimTeam) {
+				UE_LOG(LogTemp, Log, TEXT("Die: awarding point to team %d (killer %s)"), KillerTeam, *Killer->GetName());
+				GM->IncrementTeamScore(KillerTeam);
+			}
 		}
 		else
 		{
@@ -417,17 +431,20 @@ void AShooterCharacter::OnRespawn()
 	UE_LOG(LogTemp, Warning, TEXT("Client RPC - Request weapon fire on server. Function Not Implemented."));
 }*/
 
-bool AShooterCharacter::Server_RequestWeaponFire_Validate()
+bool AShooterCharacter::Server_RequestWeaponFire_Validate(bool StopFire)
 {
 	return CurrentWeapon != nullptr;
 }
 
-void AShooterCharacter::Server_RequestWeaponFire_Implementation()
+void AShooterCharacter::Server_RequestWeaponFire_Implementation(bool StopFire)
 {
 	if (!HasAuthority() || !CurrentWeapon) return;
 
 	UE_LOG(LogTemp, Warning, TEXT("Server RPC - Trigger weapon fire"));
-	CurrentWeapon->StartFiring();
+	if(StopFire)
+		CurrentWeapon->StopFiring();
+	else
+		CurrentWeapon->StartFiring();
 }
 
 void AShooterCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
