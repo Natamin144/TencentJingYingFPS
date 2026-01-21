@@ -224,7 +224,10 @@ FVector AShooterCharacter::GetWeaponTargetLocation()
 	FHitResult OutHit;
 
 	const FVector Start = GetFirstPersonCameraComponent()->GetComponentLocation();
-	const FVector End = Start + (GetFirstPersonCameraComponent()->GetForwardVector() * MaxAimDistance);
+	const FVector Forward = GetFirstPersonCameraComponent()->GetForwardVector();
+	const FVector End = Start + (Forward * MaxAimDistance);
+	FString forwardString = Forward.ToString();
+	UE_LOG(LogTemp, Log, TEXT("GetWeaponTargetLocation: Forward = %s"), *forwardString);
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
