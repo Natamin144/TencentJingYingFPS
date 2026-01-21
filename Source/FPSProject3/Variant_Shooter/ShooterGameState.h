@@ -17,11 +17,16 @@ public:
 	/** Server: increment the score for a team (call from GameMode) */
 	void AddTeamScore(uint8 TeamByte);
 
+	/** Number of teams (fixed small array handled elsewhere) */
 	UPROPERTY(EditAnywhere, Category = "Shooter")
 	int32 TeamsCount = 2;
 
+	/** Points required to win the match */
+	UPROPERTY(EditAnywhere, Category = "Shooter")
+	int32 WinningScore = 2;
+
 protected:
-	/** Array of scores by team ID - replicated to clients. Fixed size: 4 teams. */
+	/** Array of scores by team ID - replicated to clients. Fixed size: TeamsCount. */
 	UPROPERTY(ReplicatedUsing = OnRep_TeamScores)
 	TArray<int32> TeamScores;
 
@@ -31,6 +36,9 @@ protected:
 
 	/** Helper to notify local player controller UI on clients */
 	void NotifyLocalPlayerControllers();
+
+	/** Called when a team reaches WinningScore; notifies PC UIs and server GameMode */
+	void NotifyGameOver(uint8 WinningTeam);
 
 public:
 	// replication

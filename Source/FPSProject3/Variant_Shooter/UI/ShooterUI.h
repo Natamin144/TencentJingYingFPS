@@ -22,4 +22,7 @@ public:
 	/** Allows Blueprint to update score sub-widgets */
 	UFUNCTION(BlueprintImplementableEvent, Category="Shooter", meta = (DisplayName = "Update Score"))
 	void BP_UpdateScore(uint8 TeamByte, int32 Score);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Shooter", meta = (DisplayName = "Game Over"))
+	void BP_GameOver(bool win);
 };

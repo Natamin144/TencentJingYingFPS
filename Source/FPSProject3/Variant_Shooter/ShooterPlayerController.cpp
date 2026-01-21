@@ -196,6 +196,30 @@ void AShooterPlayerController::Client_OnRespawned_Implementation()
 	}
 }
 
+void AShooterPlayerController::Client_OnGameOver_Implementation(bool bWin, uint8 WinningTeam)
+{
+	// Ensure this runs on owning client
+	if (!IsLocalPlayerController()) return;
+
+	// Lazy-create ShooterUI if not present
+	if (!ShooterUI && ShooterUIClass)
+	{
+		ShooterUI = CreateWidget<UShooterUI>(this, ShooterUIClass);
+		if (ShooterUI)
+		{
+			ShooterUI->AddToPlayerScreen(0);
+		}
+	}
+
+	// Trigger blueprint UI event
+	if (ShooterUI)
+	{
+		ShooterUI->BP_GameOver(bWin);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Client_OnGameOver: WinningTeam=%d, bWin=%d"), WinningTeam, bWin);
+}
+
 void AShooterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

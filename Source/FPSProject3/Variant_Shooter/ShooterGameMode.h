@@ -36,6 +36,10 @@ public:
 
 	/** Schedule a respawn for this controller after Delay seconds (server only) */
 	void ScheduleRespawn(AController* Controller, float Delay);
+	/** Blueprint event called on server when a team wins */
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Shooter", meta = (DisplayName = "On Game Over"))
+	void BP_OnGameOver(uint8 WinningTeam);
 
 protected:
 	/** Called by timer to actually respawn controller's pawn */

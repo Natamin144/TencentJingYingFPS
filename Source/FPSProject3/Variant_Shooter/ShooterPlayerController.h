@@ -113,4 +113,8 @@ public:
 	/** Getter for respawn CharacterClass (used by GameMode when respawning) */
 	UFUNCTION()
 	TSubclassOf<AShooterCharacter> GetRespawnCharacterClass() const { return CharacterClass; }
+
+	/** Client RPC: notify owning client that game over occurred; bWin indicates whether this client/team won */
+	UFUNCTION(Client, Reliable)
+	void Client_OnGameOver(bool bWin, uint8 WinningTeam);
 };
