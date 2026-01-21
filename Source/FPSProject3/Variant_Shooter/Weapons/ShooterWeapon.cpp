@@ -99,19 +99,27 @@ void AShooterWeapon::StartFiring()
 	// raise the firing flag
 	bIsFiring = true;
 
+	// If no bullets, do not start firing
+	if (CurrentBullets <= 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("StartFiring - No bullets, aborting fire."));
+		StopFiring();
+		return;
+	}
+
 	// check how much time has passed since we last shot
 	// this may be under the refire rate if the weapon shoots slow enough and the player is spamming the trigger
 	const float TimeSinceLastShot = GetWorld()->GetTimeSeconds() - TimeOfLastShot;
 
-	if (TimeSinceLastShot > RefireRate && CurrentBullets > 0)
+	if (TimeSinceLastShot > RefireRate)
 	{
 		// fire the weapon right away
 		Fire();
 
 	} else {
 
-		// if we're full auto, schedule the next shot
-		if (bFullAuto)
+		// if we're full auto, schedule the next shot (only if there are bullets)
+		if (bFullAuto && CurrentBullets > 0)
 		{
 			GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::Fire, TimeSinceLastShot, false);
 		}
@@ -135,6 +143,15 @@ void AShooterWeapon::Fire()
 	{
 		return;
 	}
+
+	// ensure we have bullets to fire
+	if (CurrentBullets <= 0)
+	{
+		// No bullets left - stop firing (important for full-auto)
+		UE_LOG(LogTemp, Log, TEXT("Fire - No bullets left, stopping fire."));
+		StopFiring();
+		return;
+	}
 	
 	// fire a projectile at the target
 	FireProjectile(WeaponOwner->GetWeaponTargetLocation());
@@ -145,16 +162,33 @@ void AShooterWeapon::Fire()
 	// make noise so the AI perception system can hear us
 	MakeNoise(ShotLoudness, PawnOwner, PawnOwner->GetActorLocation(), ShotNoiseRange, ShotNoiseTag);
 
+	// consume bullets
+	--CurrentBullets;
+
+	// update the weapon HUD immediately after consuming bullet
+	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
+
 	// are we full auto?
 	if (bFullAuto)
 	{
-		// schedule the next shot
-		GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::Fire, RefireRate, false);
-	} else {
-
-		// for semi-auto weapons, schedule the cooldown notification
-		GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::FireCooldownExpired, RefireRate, false);
-
+		// if still firing and still have bullets, schedule the next shot
+		if (bIsFiring && CurrentBullets > 0)
+		{
+			GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::Fire, RefireRate, false);
+		}
+		else
+		{
+			// out of bullets or player stopped firing -> ensure firing stops
+			StopFiring();
+		}
+	}
+	else
+	{
+		// semi-auto: schedule cooldown notification only if bullets remain
+		if (CurrentBullets > 0)
+		{
+			GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::FireCooldownExpired, RefireRate, false);
+		}
 	}
 }
 
@@ -195,10 +229,10 @@ void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 
 	WeaponOwner->PlayFiringMontage(FiringMontage);	// play the firing montage
 	WeaponOwner->AddWeaponRecoil(FiringRecoil);	// add recoil// consume bullets
-	--CurrentBullets;
+	// --CurrentBullets;  // consumed in Fire() now
 	// if the clip is depleted, reload it
 	// update the weapon HUD
-	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
+	//WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize); // updated in Fire()
 }
 
 void AShooterWeapon::Reload()

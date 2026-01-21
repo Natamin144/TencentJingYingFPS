@@ -23,7 +23,7 @@ public:
 
 	/** Points required to win the match */
 	UPROPERTY(EditAnywhere, Category = "Shooter")
-	int32 WinningScore = 2;
+	int32 WinningScore = 5;
 
 protected:
 	/** Array of scores by team ID - replicated to clients. Fixed size: TeamsCount. */

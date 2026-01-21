@@ -39,7 +39,7 @@ protected:
 	IShooterWeaponHolder* WeaponOwner;
 
 	/** Type of projectiles this weapon will shoot */
-	UPROPERTY(EditAnywhere, Category="Ammo")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ammo")
 	TSubclassOf<AShooterProjectile> ProjectileClass;
 
 	/** Number of bullets in a magazine */
