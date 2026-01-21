@@ -15,6 +15,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "ShooterPlayerController.h"
+#include "Weapons/ShooterProjectile.h" // added to inspect DamageCauser when it's a projectile
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -88,7 +89,7 @@ float AShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dam
 	// Have we depleted HP?
 	if (CurrentHP <= 0.0f)
 	{
-		Die();
+		Die(DamageCauser);
 	}
 
 	// update the HUD
@@ -292,7 +293,7 @@ AShooterWeapon* AShooterCharacter::FindWeaponOfType(TSubclassOf<AShooterWeapon> 
 
 }
 
-void AShooterCharacter::Die()
+void AShooterCharacter::Die(AActor* DamageCauser)
 {
 	if (!HasAuthority()) {
 		UE_LOG(LogTemp, Error, TEXT("Client attempted to call Die() - ignoring (should be handled by server)"));
@@ -303,10 +304,40 @@ void AShooterCharacter::Die()
 	Die_Local();
 	Multicast_NotifyDie();
 
-	// increment the team score
+	// Determine killer character: direct actor or via projectile -> weapon -> owner
+	AShooterCharacter* Killer = nullptr;
+
+	// If damage causer is a projectile, try to locate weapon and its owner
+	if (AShooterProjectile* Projectile = Cast<AShooterProjectile>(DamageCauser))
+	{
+		if (AShooterWeapon* FromWeapon = Projectile->GetWeaponComeFrom())
+		{
+			if (AActor* WeaponOwnerActor = FromWeapon->GetOwner())
+			{
+				Killer = Cast<AShooterCharacter>(WeaponOwnerActor);
+			}
+		}
+	}
+
+	// If not found via projectile, check if DamageCauser is directly a character
+	if (!Killer)
+	{
+		Killer = Cast<AShooterCharacter>(DamageCauser);
+	}
+
+	// award point to killer's team if we found a killer character
 	if (AShooterGameMode* GM = Cast<AShooterGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		GM->IncrementTeamScore(GetTeamByte());
+		if (Killer)
+		{
+			const uint8 KillerTeam = Killer->GetTeamByte();
+			UE_LOG(LogTemp, Log, TEXT("Die: awarding point to team %d (killer %s)"), KillerTeam, *Killer->GetName());
+			GM->IncrementTeamScore(KillerTeam);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("Die: No killer character identified; no team awarded"));
+		}
 
 		// Schedule respawn via GameMode (GameMode will spawn and possess)
 		if (AController* PC = GetController())

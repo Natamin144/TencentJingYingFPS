@@ -184,6 +184,9 @@ void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 			Projectile->SetFolderPath("Bullets");
 			Projectile->SetReplicates(true);
 			Projectile->SetReplicateMovement(true);
+
+			// record which weapon spawned this projectile so we can trace kills back to the shooter
+			Projectile->SetWeaponComeFrom(this);
 		}
 	}
 	else {
@@ -194,10 +197,6 @@ void AShooterWeapon::FireProjectile(const FVector& TargetLocation)
 	WeaponOwner->AddWeaponRecoil(FiringRecoil);	// add recoil// consume bullets
 	--CurrentBullets;
 	// if the clip is depleted, reload it
-	/*if (CurrentBullets <= 0)
-	{
-		CurrentBullets = MagazineSize;
-	}*/
 	// update the weapon HUD
 	WeaponOwner->UpdateWeaponHUD(CurrentBullets, MagazineSize);
 }

@@ -10,6 +10,7 @@ class USphereComponent;
 class UProjectileMovementComponent;
 class ACharacter;
 class UPrimitiveComponent;
+class AShooterWeapon; // forward declare the weapon class
 
 /**
  *  Simple projectile class for a first person shooter game
@@ -75,6 +76,8 @@ protected:
 	/** Timer to handle deferred destruction of this projectile */
 	FTimerHandle DestructionTimer;
 
+	AShooterWeapon* WeaponComeFrom;
+
 public:	
 
 	/** Constructor */
@@ -82,6 +85,9 @@ public:
 
 	//Set Replicate
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void SetWeaponComeFrom(AShooterWeapon* Weapon);
+	AShooterWeapon* GetWeaponComeFrom() const;
 
 protected:
 	

@@ -164,7 +164,7 @@ protected:
 	AShooterWeapon* FindWeaponOfType(TSubclassOf<AShooterWeapon> WeaponClass) const;
 
 	/** Called when this character's HP is depleted */
-	void Die();
+	void Die(AActor* DamageCauser);
 	/** Handles local death effects*/
 	void Die_Local();
 

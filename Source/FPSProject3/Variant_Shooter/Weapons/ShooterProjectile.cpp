@@ -12,6 +12,7 @@
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Variant_Shooter/Weapons/ShooterWeapon.h"
 
 AShooterProjectile::AShooterProjectile()
 {
@@ -60,6 +61,7 @@ void AShooterProjectile::EndPlay(EEndPlayReason::Type EndPlayReason)
 	// clear the destruction timer
 	GetWorld()->GetTimerManager().ClearTimer(DestructionTimer);
 }
+
 
 void AShooterProjectile::NotifyHit(class UPrimitiveComponent* MyComp, AActor* Other, class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -209,4 +211,14 @@ void AShooterProjectile::Multicast_OnHitRegistered_Implementation(const FHitResu
 			Destroy();
 		}
 	}
+}
+
+void AShooterProjectile::SetWeaponComeFrom(AShooterWeapon* Weapon)
+{
+	WeaponComeFrom = Weapon;
+}
+
+AShooterWeapon* AShooterProjectile::GetWeaponComeFrom() const
+{
+	return WeaponComeFrom;
 }

@@ -70,13 +70,13 @@ void AShooterPlayerController::BeginPlay()
 	{
 		if(IsLocalController())
 		{
-			PlayerTeamByte = 1;
+			PlayerTeamByte = 0;
 			CustomPlayerName = FString::Printf(TEXT("Server Player"));
 			NetworkPlayerID = 0;
 		}
 		else
 		{
-			PlayerTeamByte = 0;
+			PlayerTeamByte = 1;
 			CustomPlayerName = FString::Printf(TEXT("Client Player"));
 			NetworkPlayerID = 1;
 		}

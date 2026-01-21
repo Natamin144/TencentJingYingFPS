@@ -172,6 +172,8 @@ public:
 	/** Returns the third person anim instance class */
 	const TSubclassOf<UAnimInstance>& GetThirdPersonAnimInstanceClass() const;
 
+	IShooterWeaponHolder* GetWeaponOwner() const { return WeaponOwner; }
+
 	/** Returns the magazine size */
 	int32 GetMagazineSize() const { return MagazineSize; };
 
