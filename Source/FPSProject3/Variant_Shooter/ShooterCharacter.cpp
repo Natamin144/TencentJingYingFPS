@@ -15,8 +15,9 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "ShooterPlayerController.h"
-#include "Weapons/ShooterProjectile.h" // added to inspect DamageCauser when it's a projectile
+#include "Weapons/ShooterProjectile.h"
 #include "Variant_Shooter/ShooterGameState.h"
+#include "Animation/AnimInstance.h" // for UAnimInstance
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -263,12 +264,32 @@ void AShooterCharacter::AddWeaponClass(const TSubclassOf<AShooterWeapon>& Weapon
 void AShooterCharacter::OnWeaponActivated(AShooterWeapon* Weapon)
 {
 	UE_LOG(LogTemp, Log, TEXT("%s 激活武器: %s"), *GetName(), *Weapon->GetName());
-	// update the bullet counter
+
+	// update the bullet counter (local owner UI)
 	OnBulletCountUpdated.Broadcast(Weapon->GetMagazineSize(), Weapon->GetBulletCount());
 
-	// set the character mesh AnimInstances
-	GetFirstPersonMesh()->SetAnimInstanceClass(Weapon->GetFirstPersonAnimInstanceClass());
-	GetMesh()->SetAnimInstanceClass(Weapon->GetThirdPersonAnimInstanceClass());
+	// Set first-person anim instance only on the owning client.
+	if (IsLocallyControlled())
+	{
+		GetFirstPersonMesh()->SetAnimInstanceClass(Weapon->GetFirstPersonAnimInstanceClass());
+	}
+
+	// Server broadcasts to all clients with the third-person anim class (safer than sending weapon pointer)
+	if (HasAuthority())
+	{
+		Multicast_OnWeaponActivated_ChangeAnim(Weapon->GetThirdPersonAnimInstanceClass());
+	}
+}
+
+void AShooterCharacter::Multicast_OnWeaponActivated_ChangeAnim_Implementation(TSubclassOf<UAnimInstance> ThirdPersonAnimClass)
+{
+	// All clients run this. Set the third-person anim instance so remote views animate correctly.
+	// It's safe to call on the owning client too (third-person mesh may be owner-no-see).
+	UE_LOG(LogTemp, Log, TEXT("%s 设置第三人称动画实例（ChangeAim）"), *GetName());
+	if (ThirdPersonAnimClass)
+	{
+		GetMesh()->SetAnimInstanceClass(ThirdPersonAnimClass);
+	}
 }
 
 void AShooterCharacter::OnWeaponDeactivated(AShooterWeapon* Weapon)

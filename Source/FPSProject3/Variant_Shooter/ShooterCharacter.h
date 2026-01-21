@@ -191,6 +191,10 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_UpdateWeaponHUD(int32 CurrentAmmo, int32 MagazineSize);
 
+	/** Multicast RPC: notify all clients to change third-person anim instance when weapon activates */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnWeaponActivated_ChangeAnim(TSubclassOf<UAnimInstance> ThirdPersonAnimClass);
+
 public:
 	// 服务器 RPC：由服务端调用，用于触发多播
 	UFUNCTION(Server, Reliable, WithValidation)
