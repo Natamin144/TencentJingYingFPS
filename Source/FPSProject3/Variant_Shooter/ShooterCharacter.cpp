@@ -277,17 +277,12 @@ void AShooterCharacter::AddWeaponClass(const TSubclassOf<AShooterWeapon>& Weapon
 
 void AShooterCharacter::OnWeaponActivated(AShooterWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Log, TEXT("%s 激活武器: %s"), *GetName(), *Weapon->GetName());
-
-	// update the bullet counter (local owner UI)
+	// update the bullet counter
 	OnBulletCountUpdated.Broadcast(Weapon->GetMagazineSize(), Weapon->GetBulletCount());
 
-	// Set first-person anim instance only on the owning client.
-	if (IsLocallyControlled())
-	{
-		GetFirstPersonMesh()->SetAnimInstanceClass(Weapon->GetFirstPersonAnimInstanceClass());
-	}
-
+	// set the character mesh AnimInstances
+	GetFirstPersonMesh()->SetAnimInstanceClass(Weapon->GetFirstPersonAnimInstanceClass());
+	//GetMesh()->SetAnimInstanceClass(Weapon->GetThirdPersonAnimInstanceClass());
 	// Server broadcasts to all clients with the third-person anim class (safer than sending weapon pointer)
 	if (HasAuthority())
 	{
