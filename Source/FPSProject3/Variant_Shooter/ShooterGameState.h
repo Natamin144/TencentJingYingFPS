@@ -48,4 +48,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool GetIsGameOverNotified() const { return IsGameOverNotified; }
+
+	int RegisteredServerControllersCount;
 };

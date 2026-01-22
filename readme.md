@@ -14,16 +14,7 @@
 
 ## 项目加载和运行
 
-在Unreal Engine 加载后，先执行Live Coding编译代码
-
-有一部分蓝图绑定由于刚加载时未编译而缺失，需要重新绑定。
-
-具体位置包括：
-
-* BP_ShooterGameMode中，游戏状态类设置为ShooterGameState(C++类)，否则击杀计分不能运行
-* BP_ShooterPlayerController中，Shooter UiClass设置为UI_Shooter，否则玩家头顶的计分板、血条等UI无法显示
-
-将网络模式设置为服务器-客户端模式，玩家数量2时，就可以正常进行游戏。
+加载项目后，将网络模式设置为服务器-客户端模式（以监听服务器运行），玩家数量2时，就可以正常进行游戏。
 
 ## 游戏规则完善
 
@@ -41,10 +32,13 @@ ShooterGameMode和ShooterUI也进行了更进一步的完善。击杀计分规�
 
 一部分则使用RPC多播进行执行。
 
-## 项目不足之处
+## 遇到的困难与项目不足之处
 
 这个项目对于我来说，还有很多地方需要改进。这些缺点成为了我的经历和教训，也是我未来在游戏等项目程序设计中将会避免的地方。
 
 项目在类的设计上，起初没有考虑好继承结构。导致AShooterCharacter类将游戏角色和玩家操控者身份高度耦合。当后面需要添加AI角色时，AI角色不能复用很多一个射击者角色的代码，如CurrentWeapon、TeamByte等。
 
-项目在源码编译上没有找到快速便捷的编译工具。使用VS进行编译时，编译时间难以接受，且编译报错多样不好解决，因此只在从模板生成项目时进行过1次编译。UE5的Live Coding在第一次编译时同样需要相当长的编译时间，在编译时可能会出现Live Coding崩溃，导致需要重新加载整个UE5项目的情况。
+项目在源码编译上没有找到快速便捷的编译工具。使用VS进行编译时，将近3小时编译时间难以接受，且编译报错多样不好解决，因此只在从模板生成项目时进行过1次编译。UE5的Live Coding在第一次编译时同样需要相当长的编译时间，在编译时可能会出现Live Coding崩溃，导致需要重新加载整个UE5项目的情况。这曾经给我带来过困难。创建ShooterGameState.cpp时，由于只使用Live Coding，没有进行编译。导致每次进入UE5都会因为ShooterGameState.cpp不存在，有一部分蓝图绑定由于刚加载时未编译而缺失，需要重新绑定。这两条连接包括：
+
+* BP_ShooterGameMode中，游戏状态类设置为ShooterGameState(C++类)，否则击杀计分不能运行
+* BP_ShooterPlayerController中，Shooter UiClass设置为UI_Shooter，否则玩家头顶的计分板、血条等UI无法显示

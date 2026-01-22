@@ -13,7 +13,7 @@
 #include "Widgets/Input/SVirtualJoystick.h"
 #include "UI/ShooterUI.h"
 #include "Net/UnrealNetwork.h"
-
+#include "Variant_Shooter/ShooterGameState.h"
 void AShooterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -68,17 +68,20 @@ void AShooterPlayerController::BeginPlay()
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		AShooterGameState* GameState = Cast<AShooterGameState>(UGameplayStatics::GetGameState(GetWorld()));
 		if(IsLocalController())
 		{
 			PlayerTeamByte = 0;
 			CustomPlayerName = FString::Printf(TEXT("Server Player"));
-			NetworkPlayerID = 0;
+			NetworkPlayerID = GameState -> RegisteredServerControllersCount;
+			GameState->RegisteredServerControllersCount = GameState->RegisteredServerControllersCount + 1;
 		}
 		else
 		{
 			PlayerTeamByte = 1;
-			CustomPlayerName = FString::Printf(TEXT("Client Player"));
-			NetworkPlayerID = 1;
+			NetworkPlayerID = GameState->RegisteredServerControllersCount;
+			GameState->RegisteredServerControllersCount = GameState->RegisteredServerControllersCount + 1;
+			CustomPlayerName = FString::Printf(TEXT("Client Player %d"), NetworkPlayerID);
 		}
 	}
 }
