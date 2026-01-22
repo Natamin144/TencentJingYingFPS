@@ -281,7 +281,11 @@ void AShooterCharacter::OnWeaponActivated(AShooterWeapon* Weapon)
 	OnBulletCountUpdated.Broadcast(Weapon->GetMagazineSize(), Weapon->GetBulletCount());
 
 	// set the character mesh AnimInstances
-	GetFirstPersonMesh()->SetAnimInstanceClass(Weapon->GetFirstPersonAnimInstanceClass());
+	if(GetController() && GetController()->IsLocalController())
+	{
+		// Owning client sets first-person anim instance
+		GetFirstPersonMesh()->SetAnimInstanceClass(Weapon->GetFirstPersonAnimInstanceClass());
+	}
 	//GetMesh()->SetAnimInstanceClass(Weapon->GetThirdPersonAnimInstanceClass());
 	// Server broadcasts to all clients with the third-person anim class (safer than sending weapon pointer)
 	if (HasAuthority())
