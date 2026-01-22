@@ -209,4 +209,21 @@ public:
 	void MulticastPickUpWeapon_Implementation(AShooterPickup* weaponPickUp);
 
 	void BindPawnBroadcast();
+
+	// 切换武器：客户端 -> 服务器 -> 服务器广播给所有客户端
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerChangeIntoWeapon(int32 WeaponIndex);
+	bool ServerChangeIntoWeapon_Validate(int32 WeaponIndex);
+	void ServerChangeIntoWeapon_Implementation(int32 WeaponIndex);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastChangeIntoWeapon(int32 WeaponIndex);
+	void MulticastChangeIntoWeapon_Implementation(int32 WeaponIndex);
+
+	/** 请求切换到索引武器（调用者可能为客户端或服务端） */
+	void ChangeIntoWeapon(int WeaponIndex);
+
+private:
+	/** 在所有端（服务器+客户端）执行真实切换逻辑（由 multicast 调用） */
+	void DoChangeIntoWeapon(int32 WeaponIndex);
 };

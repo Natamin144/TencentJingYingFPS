@@ -148,12 +148,8 @@ void AShooterCharacter::DoSwitchWeapon()
 	// ensure we have at least two weapons two switch between
 	if (OwnedWeapons.Num() > 1)
 	{
-		// deactivate the old weapon
-		CurrentWeapon->DeactivateWeapon();
-
 		// find the index of the current weapon in the owned list
 		int32 WeaponIndex = OwnedWeapons.Find(CurrentWeapon);
-
 		// is this the last weapon?
 		if (WeaponIndex == OwnedWeapons.Num() - 1)
 		{
@@ -164,13 +160,59 @@ void AShooterCharacter::DoSwitchWeapon()
 			// select the next weapon index
 			++WeaponIndex;
 		}
-
-		// set the new weapon as current
-		CurrentWeapon = OwnedWeapons[WeaponIndex];
-
-		// activate the new weapon
-		CurrentWeapon->ActivateWeapon();
+		ChangeIntoWeapon(WeaponIndex);
 	}
+}
+
+void AShooterCharacter::ChangeIntoWeapon(int WeaponIndex)
+{
+	// Validate index locally
+	if (!OwnedWeapons.IsValidIndex(WeaponIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ChangeIntoWeapon - Invalid WeaponIndex %d"), WeaponIndex);
+		return;
+	}
+
+	// If client, forward request to server
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Client ChangeIntoWeapon - sending RPC to server, Index=%d"), WeaponIndex);
+		ServerChangeIntoWeapon(WeaponIndex);
+		return;
+	}
+
+	// Server: broadcast to all clients (and server) to perform the change
+	UE_LOG(LogTemp, Log, TEXT("Server ChangeIntoWeapon - broadcasting Index=%d"), WeaponIndex);
+	MulticastChangeIntoWeapon(WeaponIndex);
+}
+
+void AShooterCharacter::DoChangeIntoWeapon(int32 WeaponIndex)
+{
+	// executed on server and all clients (via multicast)
+	if (!OwnedWeapons.IsValidIndex(WeaponIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DoChangeIntoWeapon - Invalid index %d"), WeaponIndex);
+		return;
+	}
+
+	AShooterWeapon* NewWeapon = OwnedWeapons[WeaponIndex];
+	if (!IsValid(NewWeapon))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DoChangeIntoWeapon - NewWeapon is null at index %d"), WeaponIndex);
+		return;
+	}
+
+	// deactivate the old weapon (if any)
+	if (IsValid(CurrentWeapon))
+	{
+		CurrentWeapon->DeactivateWeapon();
+	}
+
+	// set the new weapon as current
+	CurrentWeapon = NewWeapon;
+
+	// activate the new weapon locally
+	CurrentWeapon->ActivateWeapon();
 }
 
 void AShooterCharacter::AttachWeaponMeshes(AShooterWeapon* Weapon)
@@ -258,16 +300,8 @@ void AShooterCharacter::AddWeaponClass(const TSubclassOf<AShooterWeapon>& Weapon
 		{
 			// add the weapon to the owned list
 			OwnedWeapons.Add(AddedWeapon);
-
-			// if we have an existing weapon, deactivate it
-			if (CurrentWeapon)
-			{
-				CurrentWeapon->DeactivateWeapon();
-			}
-
-			// switch to the new weapon
-			CurrentWeapon = AddedWeapon;
-			CurrentWeapon->ActivateWeapon();
+			int32 WeaponIndex = OwnedWeapons.Find(AddedWeapon);
+			ChangeIntoWeapon(WeaponIndex);
 		}
 	}
 	else {
@@ -281,7 +315,7 @@ void AShooterCharacter::OnWeaponActivated(AShooterWeapon* Weapon)
 	OnBulletCountUpdated.Broadcast(Weapon->GetMagazineSize(), Weapon->GetBulletCount());
 
 	// set the character mesh AnimInstances
-	if(GetController() && GetController()->IsLocalController())
+	if (GetLocalRole() == ROLE_Authority || (GetController() && GetController()->IsLocalController()))
 	{
 		// Owning client sets first-person anim instance
 		GetFirstPersonMesh()->SetAnimInstanceClass(Weapon->GetFirstPersonAnimInstanceClass());
@@ -567,4 +601,29 @@ uint16 AShooterCharacter::GetPlayerNetworkID()
 		return PC->NetworkPlayerID;
 	}
 	return 0;
+}
+
+/** Server RPC: client->server request to change weapon */
+bool AShooterCharacter::ServerChangeIntoWeapon_Validate(int32 WeaponIndex)
+{
+	// simple validation: index in bounds and weapon exists
+	return OwnedWeapons.IsValidIndex(WeaponIndex) && IsValid(OwnedWeapons[WeaponIndex]);
+}
+
+void AShooterCharacter::ServerChangeIntoWeapon_Implementation(int32 WeaponIndex)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+	UE_LOG(LogTemp, Log, TEXT("ServerChangeIntoWeapon_Implementation - Received request, Index=%d"), WeaponIndex);
+	// Server authoritative: broadcast to all clients (and server) to perform the change
+	MulticastChangeIntoWeapon(WeaponIndex);
+}
+
+/** Multicast RPC implementation: executed on server + all clients */
+void AShooterCharacter::MulticastChangeIntoWeapon_Implementation(int32 WeaponIndex)
+{
+	UE_LOG(LogTemp, Log, TEXT("MulticastChangeIntoWeapon_Implementation - Executing change on all clients, Index=%d"), WeaponIndex);
+	DoChangeIntoWeapon(WeaponIndex);
 }

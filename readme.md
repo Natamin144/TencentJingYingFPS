@@ -14,7 +14,7 @@
 
 ## 项目加载和运行
 
-加载项目后，将网络模式设置为服务器-客户端模式（以监听服务器运行），玩家数量2时，就可以正常进行游戏。
+加载项目后，将网络模式设置为服务器-客户端模式（以监听服务器运行），经过测试，在玩家数量为2-4时，可以正常进行游戏。
 
 ## 游戏规则完善
 
@@ -30,7 +30,9 @@ ShooterGameMode和ShooterUI也进行了更进一步的完善。击杀计分规�
 
 一部分使用ReplicatedUsing=OnRep_...。例如玩家生命值的同步。
 
-一部分则使用RPC多播进行执行。
+一部分则使用RPC多播进行执行。例如ChangeIntoWeapon - 玩家切换武器时，需要通知所有玩家。
+
+客户端调用ChangeIntoWeapon时，会调用ServerChangeIntoWeapon，通知服务器切换玩家的武器。服务器执行ServerChangeIntoWeapon后，通过MulticastChangeIntoWeapon广播所有客户端执行DoChangeIntoWeapon，也就是切换武器的主体逻辑（收起旧武器，拿起新武器）。
 
 ## 遇到的困难与项目不足之处
 
